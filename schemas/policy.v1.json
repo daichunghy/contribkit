@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/daichunghy/contribkit/schemas/policy.v1.json",
+  "title": "contribkit.policy.v1",
+  "description": "Optional contribkit.yml overlay in a target repository. Stub for P0.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema"],
+  "properties": {
+    "schema": { "const": "contribkit.policy.v1" },
+    "maxFiles": { "type": "integer", "minimum": 1 },
+    "maxDiffLines": { "type": "integer", "minimum": 1 },
+    "requireIssue": { "type": "boolean" },
+    "aiDisclosure": { "enum": ["required", "advisory", "off"] },
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "command": { "type": "string" },
+        "record": { "type": "boolean" }
+      }
+    },
+    "ignorePaths": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

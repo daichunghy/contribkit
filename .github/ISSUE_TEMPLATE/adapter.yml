@@ -1,0 +1,40 @@
+name: Adapter request
+description: Propose a language/tool adapter with a fixture. This is the preferred first contribution.
+title: "adapter: "
+labels: ["good first issue", "adapter"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        An adapter is a fixture plus match rules (for example `pytest.ini` → recorded `pytest`).
+        It must not execute commands from the target repository.
+  - type: input
+    id: ecosystem
+    attributes:
+      label: Ecosystem
+      description: npm, PyPI, crates, Go, or other
+      placeholder: python-pytest
+    validations:
+      required: true
+  - type: input
+    id: match-files
+    attributes:
+      label: Files that should activate this adapter
+      placeholder: pyproject.toml, pytest.ini
+    validations:
+      required: true
+  - type: input
+    id: test-family
+    attributes:
+      label: Allowlisted test command family
+      description: Must be a simple argv family (pytest, npm test, cargo test, go test). No pipes.
+      placeholder: pytest -q
+    validations:
+      required: true
+  - type: textarea
+    id: fixture
+    attributes:
+      label: Fixture sketch
+      description: What a tiny target repo looks like when this adapter should fire.
+    validations:
+      required: true

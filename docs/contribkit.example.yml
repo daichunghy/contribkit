@@ -1,0 +1,12 @@
+# Example overlay a *target* repository may add. Absence is normal.
+# Unknown keys must become needs-human at compile time; they must never execute.
+schema: contribkit.policy.v1
+maxFiles: 20
+maxDiffLines: 400
+requireIssue: true
+aiDisclosure: advisory
+test:
+  command: npm test
+  record: true
+ignorePaths:
+  - docs/**

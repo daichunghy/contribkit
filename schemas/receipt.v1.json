@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/daichunghy/contribkit/schemas/receipt.v1.json",
+  "title": "contribkit.receipt.v1",
+  "description": "Preflight receipt. Stub for P0; evaluator not shipped yet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "status", "digest"],
+  "properties": {
+    "schema": { "const": "contribkit.receipt.v1" },
+    "status": { "enum": ["pass", "blocked", "needs-human"] },
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "overridden": { "type": "boolean" },
+    "evaluatedAt": { "type": "string" },
+    "blockers": { "type": "array", "items": { "type": "object" } }
+  }
+}

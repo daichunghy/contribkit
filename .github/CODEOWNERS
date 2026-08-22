@@ -1,0 +1,5 @@
+# Adapter PRs should not wait on compiler review.
+* @daichunghy
+/src/ @daichunghy
+/schemas/ @daichunghy
+/adapters/ @daichunghy
