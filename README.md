@@ -4,12 +4,14 @@
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![npm](https://img.shields.io/npm/v/contribkit.svg)](https://www.npmjs.com/package/contribkit)
+[![CI](https://github.com/daichunghy/contribkit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/daichunghy/contribkit/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/daichunghy/contribkit/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/daichunghy/contribkit/actions/workflows/codeql.yml)
 
 contribkit is a **contribution preflight** for coding agents and humans. It compiles explicit repo artifacts (`CONTRIBUTING`, PR templates, `CODEOWNERS`, optional `contribkit.yml`) into a deterministic contract, then evaluates the local diff before a pull request is opened.
 
 This is **not** contributor-image generation ([LizardByte/contribkit](https://github.com/LizardByte/contribkit)), not a contribution-proposal bot ([vidiyala99/contribkit](https://github.com/vidiyala99/contribkit)), and not a GitHub merge gate ([PatchGate](https://github.com/daichunghy/patchgate)).
 
-**Status:** `0.1.0-alpha.1` on npm. Not in the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility claim.
+**Status:** `0.1.0-alpha.2` on npm (alpha). Not in the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility claim.
 
 ```sh
 npx contribkit preflight --repo . --base HEAD
@@ -61,6 +63,10 @@ Claude Code plugin (local marketplace, not the Anthropic catalog):
 - A `v0.1.0` stable claim — this tag is alpha
 
 It does **not** decide whether code is correct, written by AI, or merge-worthy.
+
+## Security
+
+See [SECURITY.md](.github/SECURITY.md) and [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).
 
 ## License
 

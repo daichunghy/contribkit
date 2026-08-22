@@ -1,9 +1,17 @@
 {
   "name": "contribkit",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "private": false,
   "description": "Deterministic contribution preflight for coding agents — do not open the PR until the repo contract is satisfied.",
+  "author": {
+    "name": "daichunghy",
+    "url": "https://github.com/daichunghy"
+  },
   "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "types": "./dist/src/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/daichunghy/contribkit.git"
@@ -42,7 +50,9 @@
     "skills",
     ".mcp.json",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "docs/CHANGELOG.md",
+    "docs/THREAT_MODEL.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
