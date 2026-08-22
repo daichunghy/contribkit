@@ -1,0 +1,6 @@
+{
+  "id": "python-pytest",
+  "expectRuleId": "adapter-python-pytest",
+  "expectCommand": "pytest -q",
+  "expectSeverity": "advisory"
+}

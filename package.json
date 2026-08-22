@@ -24,6 +24,9 @@
     "developer-tools"
   ],
   "type": "module",
+  "bin": {
+    "contribkit": "dist/src/cli.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -33,14 +36,24 @@
   "files": [
     "dist",
     "schemas",
+    "adapters",
+    ".claude-plugin",
+    "hooks",
+    "skills",
+    ".mcp.json",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "verify": "npm run typecheck && npm run test && npm run build"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "yaml": "^2.8.1"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",

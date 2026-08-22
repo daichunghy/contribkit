@@ -1,0 +1,6 @@
+{
+  "id": "python-pytest",
+  "match": { "filesAny": ["pytest.ini", "pyproject.toml"] },
+  "testCommand": "pytest -q",
+  "maxDiffLines": null
+}

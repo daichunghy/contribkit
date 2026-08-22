@@ -1,0 +1,41 @@
+{
+  "description": "Deny pull-request creation until contribkit preflight passes. Does not rewrite argv.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(gh pr create *)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/src/hook.js\""
+          },
+          {
+            "type": "command",
+            "if": "Bash(glab mr create *)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/src/hook.js\""
+          },
+          {
+            "type": "command",
+            "if": "PowerShell(gh pr create *)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/src/hook.js\""
+          },
+          {
+            "type": "command",
+            "if": "PowerShell(glab mr create *)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/src/hook.js\""
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*__create_pull_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/src/hook.js\""
+          }
+        ]
+      }
+    ]
+  }
+}

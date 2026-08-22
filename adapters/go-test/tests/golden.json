@@ -1,0 +1,6 @@
+{
+  "id": "go-test",
+  "expectRuleId": "adapter-go-test",
+  "expectCommand": "go test",
+  "expectSeverity": "advisory"
+}

@@ -6,7 +6,7 @@ This repository is Apache-2.0. By opening a pull request you license your contri
 
 Add an **adapter fixture**, not a vague docs tweak. Use the [adapter issue form](https://github.com/daichunghy/contribkit/issues/new?template=adapter.yml).
 
-Until the adapter loader ships (P7), those issues stay open as the contribution queue. Do not send a compiler rewrite as a first PR.
+Copy `adapters/python-pytest/` as a template. Adapters live in this repository; a `adapters/` folder inside a *target* repo is ignored. Do not send a compiler rewrite as a first PR.
 
 ## Local checks
 

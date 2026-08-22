@@ -1,0 +1,6 @@
+{
+  "id": "node-npm-test",
+  "expectRuleId": "adapter-node-npm-test",
+  "expectCommand": "npm test",
+  "expectSeverity": "advisory"
+}

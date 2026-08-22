@@ -2,16 +2,57 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/daichunghy/contribkit/schemas/receipt.v1.json",
   "title": "contribkit.receipt.v1",
-  "description": "Preflight receipt. Stub for P0; evaluator not shipped yet.",
+  "description": "Preflight receipt. evaluatedAt and overridden sit outside the digested body.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "status", "digest"],
+  "required": [
+    "schema",
+    "status",
+    "digest",
+    "contractDigest",
+    "snapshotDigest",
+    "findings",
+    "evaluatedAt",
+    "overridden"
+  ],
   "properties": {
     "schema": { "const": "contribkit.receipt.v1" },
     "status": { "enum": ["pass", "blocked", "needs-human"] },
     "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "overridden": { "type": "boolean" },
-    "evaluatedAt": { "type": "string" },
-    "blockers": { "type": "array", "items": { "type": "object" } }
+    "contractDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "snapshotDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ruleId", "severity", "origin", "check", "message", "passed"],
+        "properties": {
+          "ruleId": { "type": "string" },
+          "severity": { "enum": ["block", "advisory", "needs-human"] },
+          "origin": { "type": "string" },
+          "check": {
+            "enum": [
+              "file_exists",
+              "pr_body_matches",
+              "pr_checkboxes",
+              "issue_link",
+              "path_owned",
+              "max_files",
+              "max_diff_lines",
+              "forbidden_path",
+              "command_recorded",
+              "commit_signed_off",
+              "unknown_key",
+              "unknown_check"
+            ]
+          },
+          "message": { "type": "string" },
+          "passed": { "type": "boolean" }
+        }
+      }
+    },
+    "evaluatedAt": { "type": "string", "minLength": 1 },
+    "overridden": { "type": "boolean" }
   }
 }

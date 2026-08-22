@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/daichunghy/contribkit/schemas/contract.v1.json",
   "title": "contribkit.contract.v1",
-  "description": "Compiled contribution contract. Stub for P0; compiler not shipped yet.",
+  "description": "Compiled contribution contract produced by contribkit compile.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "ref", "sources", "rules", "advisory", "needsHuman"],
@@ -17,13 +17,50 @@
         "additionalProperties": false,
         "required": ["path", "digest"],
         "properties": {
-          "path": { "type": "string" },
+          "path": { "type": "string", "minLength": 1 },
           "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
         }
       }
     },
-    "rules": { "type": "array", "items": { "type": "object" } },
-    "advisory": { "type": "array", "items": { "type": "object" } },
-    "needsHuman": { "type": "array", "items": { "type": "object" } }
+    "rules": { "type": "array", "items": { "$ref": "#/$defs/rule" } },
+    "advisory": { "type": "array", "items": { "$ref": "#/$defs/rule" } },
+    "needsHuman": { "type": "array", "items": { "$ref": "#/$defs/rule" } }
+  },
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "severity", "origin", "check", "message"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "severity": { "enum": ["block", "advisory", "needs-human"] },
+        "origin": { "type": "string", "minLength": 1 },
+        "check": {
+          "enum": [
+            "file_exists",
+            "pr_body_matches",
+            "pr_checkboxes",
+            "issue_link",
+            "path_owned",
+            "max_files",
+            "max_diff_lines",
+            "forbidden_path",
+            "command_recorded",
+            "commit_signed_off",
+            "unknown_key",
+            "unknown_check"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string" },
+        "pattern": { "type": "string" },
+        "command": { "type": "string" },
+        "max": { "type": "integer", "minimum": 0 },
+        "glob": { "type": "string" },
+        "ignore": { "type": "array", "items": { "type": "string" } },
+        "patterns": { "type": "array", "items": { "type": "string" } },
+        "keys": { "type": "array", "items": { "type": "string" } }
+      }
+    }
   }
 }

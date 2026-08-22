@@ -1,7 +1,7 @@
 # Security
 
-Report vulnerabilities via [GitHub Security Advisories](https://github.com/daichunghy/contribkit/security/advisories/new).
+Report vulnerabilities privately via GitHub Security Advisories on this repository.
 
-contribkit treats the target working tree as untrusted. The compiler and evaluator must not execute commands from `CONTRIBUTING`, `package.json` scripts, or `contribkit.yml` unless the user passes `--run-tests` and the argv matches a fixed allowlist (no pipes, no `&&`, no `$()`).
+contribkit does not execute commands found in a target repository unless the user passes `--run-tests` and the argv matches the allowlist in `spec/THREAT_MODEL.md` (in the Github 2 workspace) / the in-repo allowlist (`npm test`, `pytest`, `cargo test`, `go test`, and close families). Pipes, `&&`, and `$()` are rejected.
 
-Hooks must deny or allow PR-create tools. They must not rewrite `gh pr create` command strings.
+Do not send tokens or private repository contents to public issues.

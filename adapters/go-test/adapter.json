@@ -1,0 +1,6 @@
+{
+  "id": "go-test",
+  "match": { "filesAny": ["go.mod"] },
+  "testCommand": "go test",
+  "maxDiffLines": null
+}

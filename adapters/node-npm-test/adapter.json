@@ -1,0 +1,6 @@
+{
+  "id": "node-npm-test",
+  "match": { "filesAny": ["package.json"] },
+  "testCommand": "npm test",
+  "maxDiffLines": null
+}
