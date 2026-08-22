@@ -39,8 +39,8 @@ function help(): string {
     "CONTRIBKIT_ALLOW=1 or --allow sets receipt.overridden = true; it does not rewrite argv.",
     "--run-tests is opt-in and only executes allowlisted argv (no pipes, &&, or $()).",
     "",
-    "This CLI is not published to npm yet. After clone and build, run:",
-    "  node dist/src/cli.js <command>",
+    "Install: npx contribkit <command>  (or clone, npm ci, npm run build,",
+    "then node dist/src/cli.js <command>).",
   ].join("\n");
 }
 

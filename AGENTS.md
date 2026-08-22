@@ -7,18 +7,15 @@ contribkit is a deterministic contribution preflight. Do not put an LLM in `comp
 ```sh
 npm install
 npm run verify
-node dist/src/cli.js compile --repo . --out /tmp/contract.json
-node dist/src/cli.js preflight --repo . --base HEAD
-node dist/src/cli.js explain /tmp/receipt.json
-node dist/src/cli.js mcp
+npx contribkit preflight --repo . --base HEAD
 ```
 
-Do not document `npx contribkit` until the package is actually on npm.
+The npm package is `contribkit@0.1.0-alpha.1`. Do not claim the Anthropic community plugin catalog or Claude-for-OSS eligibility.
 
 ## Rules
 
 - TypeScript strict. No `any`.
-- Do not claim npm, marketplace listing, stars, or Claude-for-OSS eligibility.
+- Do not claim marketplace listing, stars, or Claude-for-OSS eligibility.
 - Do not execute target-repo scripts unless `--run-tests` and allowlist.
 - Do not copy source from PatchGate. New schemas, new package name.
 - Hook matchers must cover Bash, PowerShell, and `mcp__.*__create_pull_request`. Do not match `git push` or `git request-pull`.

@@ -22,4 +22,4 @@ Keep the PR under 20 files / 400 lines unless you are changing schemas with test
 - Telemetry
 - Auto-opening pull requests against other people's repositories
 - Running arbitrary commands from a target repo's CONTRIBUTING
-- npm badges or marketplace claims before those things exist
+- Marketplace catalog claims before the Anthropic catalog contains `contribkit`

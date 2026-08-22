@@ -12,18 +12,19 @@ import {
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 describe("P0 skeleton", () => {
-  it("exports a dev version and schema ids", () => {
-    expect(VERSION).toBe("0.1.0-dev");
+  it("exports a version and schema ids", () => {
+    expect(VERSION).toBe("0.1.0-alpha.1");
     expect(SCHEMA_CONTRACT).toBe("contribkit.contract.v1");
     expect(SCHEMA_RECEIPT).toBe("contribkit.receipt.v1");
     expect(SCHEMA_POLICY).toBe("contribkit.policy.v1");
   });
 
-  it("does not advertise an npm package that does not exist", () => {
+  it("documents the published npm package without a marketplace catalog claim", () => {
     const readme = readFileSync(join(root, "README.md"), "utf8");
-    expect(readme).toMatch(/Not on npm/);
-    expect(readme).not.toMatch(/img\.shields\.io\/npm/);
-    expect(readme).not.toMatch(/npx contribkit/);
+    expect(readme).toMatch(/npx contribkit/);
+    expect(readme).toMatch(/img\.shields\.io\/npm\/v\/contribkit/);
+    expect(readme).not.toMatch(/Not on npm/);
+    expect(readme).not.toMatch(/claude-plugins-community catalog/);
   });
 
   it("ships Apache-2.0", () => {
@@ -31,9 +32,9 @@ describe("P0 skeleton", () => {
     expect(license).toMatch(/Apache License/);
     const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
       license: string;
-      private: boolean;
+      private?: boolean;
     };
     expect(pkg.license).toBe("Apache-2.0");
-    expect(pkg.private).toBe(true);
+    expect(pkg.private).toBe(false);
   });
 });
