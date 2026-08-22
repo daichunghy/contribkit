@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { realpathSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -159,13 +160,18 @@ export async function runCli(argv: string[], io: CliIo = defaultIo): Promise<num
   }
 }
 
-function isDirectRun(): boolean {
-  const argv1 = process.argv[1];
+export function isDirectRun(argv1 = process.argv[1], moduleHref = import.meta.url): boolean {
   if (argv1 === undefined) return false;
+  const name = basename(argv1);
+  if (name === "contribkit" || name.startsWith("cli")) return true;
   try {
-    return import.meta.url === pathToFileURL(resolve(argv1)).href || basename(argv1).startsWith("cli");
+    return moduleHref === pathToFileURL(realpathSync(argv1)).href;
   } catch {
-    return basename(argv1).startsWith("cli");
+    try {
+      return moduleHref === pathToFileURL(resolve(argv1)).href;
+    } catch {
+      return false;
+    }
   }
 }
 

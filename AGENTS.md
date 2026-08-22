@@ -10,7 +10,7 @@ npm run verify
 npx contribkit preflight --repo . --base HEAD
 ```
 
-The npm package is `contribkit@0.1.0-alpha.2`. Do not claim the Anthropic community plugin catalog or Claude-for-OSS eligibility.
+The npm package is `contribkit@0.1.0-alpha.3`. Do not claim the Anthropic community plugin catalog or Claude-for-OSS eligibility.
 
 ## Rules
 

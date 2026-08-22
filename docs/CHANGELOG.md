@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-alpha.3
+
+- `npx contribkit` actually runs. The bin used to no-op when argv1 was the `contribkit` shim instead of `cli.js`.
+
 ## 0.1.0-alpha.2
 
 - In-repo threat model, Code of Conduct, SUPPORT, and OpenSSF Scorecard workflow

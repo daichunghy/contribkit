@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { isDirectRun } from "../src/cli.js";
 import {
   SCHEMA_CONTRACT,
   SCHEMA_POLICY,
@@ -13,10 +14,16 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 describe("P0 skeleton", () => {
   it("exports a version and schema ids", () => {
-    expect(VERSION).toBe("0.1.0-alpha.2");
+    expect(VERSION).toBe("0.1.0-alpha.3");
     expect(SCHEMA_CONTRACT).toBe("contribkit.contract.v1");
     expect(SCHEMA_RECEIPT).toBe("contribkit.receipt.v1");
     expect(SCHEMA_POLICY).toBe("contribkit.policy.v1");
+  });
+
+  it("treats the npx contribkit shim as a direct run", () => {
+    expect(isDirectRun("/Users/me/.npm/_npx/pkg/node_modules/.bin/contribkit")).toBe(true);
+    expect(isDirectRun("/tmp/dist/src/cli.js")).toBe(true);
+    expect(isDirectRun("/tmp/unrelated.js")).toBe(false);
   });
 
   it("documents the published npm package without a marketplace catalog claim", () => {
