@@ -53,6 +53,10 @@ function lastCommit(snapshot: EvaluationSnapshot): string {
   return last ?? "";
 }
 
+function hasContribution(snapshot: EvaluationSnapshot, ignore?: readonly string[]): boolean {
+  return filteredPaths(snapshot, ignore).length > 0;
+}
+
 function checkPasses(rule: ContractRule, snapshot: EvaluationSnapshot): boolean {
   switch (rule.check) {
     case "file_exists":
@@ -61,6 +65,7 @@ function checkPasses(rule: ContractRule, snapshot: EvaluationSnapshot): boolean 
     case "unknown_check":
       return false;
     case "pr_body_matches": {
+      if (!hasContribution(snapshot, rule.ignore)) return true;
       const pattern = rule.pattern;
       if (pattern === undefined) return false;
       const regex = new RegExp(pattern, "i");
@@ -68,8 +73,10 @@ function checkPasses(rule: ContractRule, snapshot: EvaluationSnapshot): boolean 
       return regex.test(haystack);
     }
     case "issue_link":
+      if (!hasContribution(snapshot, rule.ignore)) return true;
       return hasIssueLink(snapshot.prBodyDraft, snapshot.branchName);
     case "pr_checkboxes": {
+      if (!hasContribution(snapshot, rule.ignore)) return true;
       const label = rule.pattern;
       if (label === undefined) return false;
       return checkboxChecked(snapshot.prBodyDraft, label);
@@ -102,6 +109,7 @@ function checkPasses(rule: ContractRule, snapshot: EvaluationSnapshot): boolean 
       return !changed.some((path) => matchGlob(glob, path));
     }
     case "command_recorded": {
+      if (!hasContribution(snapshot, rule.ignore)) return true;
       const required = rule.command;
       if (required === undefined) return false;
       return snapshot.recordedCommands.some(
@@ -109,6 +117,7 @@ function checkPasses(rule: ContractRule, snapshot: EvaluationSnapshot): boolean 
       );
     }
     case "commit_signed_off":
+      if (!hasContribution(snapshot, rule.ignore)) return true;
       return SIGNED_OFF.test(lastCommit(snapshot));
     default: {
       const _exhaustive: never = rule.check;

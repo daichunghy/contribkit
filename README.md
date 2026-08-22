@@ -16,7 +16,16 @@ This is **not** contributor-image generation ([LizardByte/contribkit](https://gi
 npm ci
 npm run build
 node dist/src/cli.js compile --repo . --out /tmp/contract.json
-node dist/src/cli.js preflight --repo . --base HEAD --out /tmp/receipt.json
+node dist/src/cli.js preflight --repo . --base HEAD
+```
+
+A clean clone against `HEAD` should print `contribkit pass`. There is no pull request yet, so missing `npm test` records and empty PR checkboxes are not blockers.
+
+When you have local changes, record tests (opt-in) or the receipt stays `blocked` until a passing allowlisted command is recorded:
+
+```sh
+node dist/src/cli.js preflight --repo . --base HEAD --run-tests
+node dist/src/cli.js preflight --repo . --base HEAD --body-file /tmp/pr.md --out /tmp/receipt.json
 node dist/src/cli.js explain /tmp/receipt.json
 ```
 

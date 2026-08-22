@@ -1,5 +1,7 @@
+import { execFile as execFileCallback } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import { compile } from "../src/compile.js";
 import { preflight } from "../src/preflight.js";
@@ -8,6 +10,8 @@ import { runCli } from "../src/cli.js";
 import { canonicalJson } from "../src/canonical.js";
 import { receiptBodyOf } from "../src/evaluate.js";
 import { repoRoot, stageFixture } from "./helpers.js";
+
+const execFile = promisify(execFileCallback);
 
 async function captureCli(argv: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
   let stdout = "";
@@ -61,6 +65,17 @@ describe("golden fixtures", () => {
     const once = await preflight({ repoPath: repo, baseRef: "HEAD", evaluatedAt: "2020-01-01T00:00:00.000Z" });
     expect(canonicalJson(receiptBodyOf(again.receipt))).toBe(canonicalJson(receiptBodyOf(once.receipt)));
     expect(again.receipt.digest).toBe(once.receipt.digest);
+  });
+
+  it("clean tree versus HEAD is pass even when tests would be required", async () => {
+    const repo = await stageFixture("missing-issue");
+    await execFile("git", ["reset", "--hard", "HEAD"], { cwd: repo });
+    await execFile("git", ["clean", "-fd"], { cwd: repo });
+    const { receipt } = await preflight({ repoPath: repo, baseRef: "HEAD" });
+    expect(receipt.status).toBe("pass");
+    const cli = await captureCli(["preflight", "--repo", repo, "--base", "HEAD"]);
+    expect(cli.code).toBe(0);
+    expect(cli.stdout).toMatch(/contribkit pass/);
   });
 
   it("does not walk up to a parent git root", async () => {

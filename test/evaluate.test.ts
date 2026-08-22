@@ -69,6 +69,44 @@ describe("evaluate", () => {
     assertReceipt(a);
   });
 
+  it("does not require recorded tests or a PR body when the diff is empty", () => {
+    const contract = makeContract(
+      [
+        blockRule({
+          id: "test-command",
+          check: "command_recorded",
+          command: "npm test",
+          message: "record npm test",
+        }),
+        blockRule({
+          id: "issue-link",
+          check: "issue_link",
+          message: "link an issue",
+        }),
+      ],
+      [
+        blockRule({
+          id: "box",
+          check: "pr_checkboxes",
+          severity: "advisory",
+          pattern: "I did not add an npm or marketplace badge",
+          message: "check the box",
+        }),
+      ],
+    );
+    const receipt = evaluate(
+      contract,
+      emptySnapshot({
+        changedPaths: [],
+        diffStat: { files: 0, insertions: 0, deletions: 0 },
+        prBodyDraft: "",
+        recordedCommands: [],
+      }),
+    );
+    expect(receipt.status).toBe("pass");
+    expect(receipt.findings.every((item) => item.passed)).toBe(true);
+  });
+
   it("does not treat PR-body prose as a passing test (T6)", () => {
     const contract = makeContract([
       blockRule({
