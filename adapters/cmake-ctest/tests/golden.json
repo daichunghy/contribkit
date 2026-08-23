@@ -1,0 +1,6 @@
+{
+  "id": "cmake-ctest",
+  "expectRuleId": "adapter-cmake-ctest",
+  "expectCommand": "ctest --output-on-failure",
+  "expectSeverity": "advisory"
+}

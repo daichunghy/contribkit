@@ -13,6 +13,7 @@ export const TEST_ARGV_FAMILIES: readonly (readonly string[])[] = [
   ["python", "-m", "pytest"],
   ["cargo", "test"],
   ["go", "test"],
+  ["ctest", "--output-on-failure"],
 ];
 
 const SHELL_META = /[|;&`$<>()]/;

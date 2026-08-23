@@ -38,5 +38,5 @@ PR description must state whether the adapter is advisory or listed in `blockAda
 is advisory so a new ecosystem adapter cannot silently block a contribution. Keep the command
 recorded in the receipt and let the maintainer decide whether it belongs in a blocking policy.
 
-The current bundled set is `python-pytest`, `node-npm-test`, and `go-test`. New adapters should have
+The current bundled set is `cmake-ctest`, `python-pytest`, `node-npm-test`, and `go-test`. New adapters should have
 a real repository shape to match and should not be added only to increase the adapter count.
