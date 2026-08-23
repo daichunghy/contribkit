@@ -30,7 +30,7 @@ const SIZE_FILES = /\b(?:under|at most|max(?:imum)?|no more than)\s+(\d+)\s+file
 const SIZE_LINES = /\b(?:under|at most|max(?:imum)?|no more than)\s+(\d+)\s+(?:diff\s+)?lines?\b/i;
 const TEST_COMMAND_LINE = /(?:^|\n)\s*test(?:s)?\s*[:=]\s*(.+)/i;
 const ALLOWED_TEST_MENTION =
-  /\b(npm test|npm run test|pnpm test|yarn test|pytest|python -m pytest|cargo test|go test|bun test|deno test)\b/i;
+  /\b(npm test|npm run test|pnpm test|yarn test|pytest|python -m pytest|cargo test|go test|bun test|deno test|mix test|mvn test)\b/i;
 const AI_REQUIRE =
   /(?:\b(ai|llm|claude|codex)\b.{0,80}\b(disclos|must mention|required|declare)\b|\b(disclos|must mention|declare).{0,80}\b(ai|llm|claude|codex)\b)/i;
 const DCO_REQUIRE = /(?:require[sd]?|must).{0,40}signed-off-by|signed-off-by.{0,40}(?:required|must)/i;
@@ -174,6 +174,7 @@ export async function compile(options: CompileOptions): Promise<ContributionCont
   const npmLock = await firstExisting(repoPath, ref, CONTRACT_CANDIDATES.lockNpm);
   const pnpmLock = await firstExisting(repoPath, ref, CONTRACT_CANDIDATES.lockPnpm);
   const yarnLock = await firstExisting(repoPath, ref, CONTRACT_CANDIDATES.lockYarn);
+  const bunLock = await firstExisting(repoPath, ref, CONTRACT_CANDIDATES.lockBun);
   const pytestHint = await firstExisting(repoPath, ref, CONTRACT_CANDIDATES.pytest);
   const cargoHint = await firstExisting(repoPath, ref, CONTRACT_CANDIDATES.cargo);
   const goHint = await firstExisting(repoPath, ref, CONTRACT_CANDIDATES.gomod);
@@ -342,13 +343,15 @@ export async function compile(options: CompileOptions): Promise<ContributionCont
   if (mentionsTest || policyCommand !== undefined) {
     const packageManager =
       scripts.packageManager ??
-      (pnpmLock
-        ? ("pnpm" as const)
-        : yarnLock
-          ? ("yarn" as const)
-          : npmLock || packageJson
-            ? ("npm" as const)
-            : undefined);
+      (bunLock
+        ? ("bun" as const)
+        : pnpmLock
+          ? ("pnpm" as const)
+          : yarnLock
+            ? ("yarn" as const)
+            : npmLock || packageJson
+              ? ("npm" as const)
+              : undefined);
     const inferred =
       unsafe !== undefined && !unsafeAllowlisted
         ? undefined
@@ -361,6 +364,8 @@ export async function compile(options: CompileOptions): Promise<ContributionCont
             mentionsGo: /\bgo test\b/i.test(contribText) || goHint !== undefined,
             mentionsBun: /\bbun test\b/i.test(contribText),
             mentionsDeno: /\bdeno test\b/i.test(contribText),
+            mentionsMix: /\bmix test\b/i.test(contribText),
+            mentionsMaven: /\bmvn test\b/i.test(contribText),
           });
     if (unsafe !== undefined && !unsafeAllowlisted) {
       compiled.push(
@@ -404,7 +409,7 @@ export async function compile(options: CompileOptions): Promise<ContributionCont
           origin: contributing?.path ?? "tests",
           check: "command_recorded",
           message:
-            "Tests are mentioned but no allowlisted command could be inferred. Record npm test / pytest / cargo test / go test / bun test / deno test with exit 0.",
+            "Tests are mentioned but no allowlisted command could be inferred. Record npm test / pytest / cargo test / go test / bun test / deno test / mix test / mvn test with exit 0.",
         }),
       );
     }

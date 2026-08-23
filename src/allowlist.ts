@@ -15,6 +15,8 @@ export const TEST_ARGV_FAMILIES: readonly (readonly string[])[] = [
   ["go", "test"],
   ["bun", "test"],
   ["deno", "test"],
+  ["mix", "test"],
+  ["mvn", "test"],
 ];
 
 export type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
@@ -103,6 +105,8 @@ export function inferTestCommand(hints: {
   mentionsGo?: boolean;
   mentionsBun?: boolean;
   mentionsDeno?: boolean;
+  mentionsMix?: boolean;
+  mentionsMaven?: boolean;
 }): string | undefined {
   if (hints.policyCommand !== undefined) {
     return allowlistedArgv(hints.policyCommand) ? hints.policyCommand.trim() : undefined;
@@ -118,5 +122,7 @@ export function inferTestCommand(hints: {
   if (hints.mentionsGo) return "go test";
   if (hints.mentionsBun) return "bun test";
   if (hints.mentionsDeno) return "deno test";
+  if (hints.mentionsMix) return "mix test";
+  if (hints.mentionsMaven) return "mvn test";
   return undefined;
 }

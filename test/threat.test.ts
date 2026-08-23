@@ -46,6 +46,13 @@ describe("threat model", () => {
     expect(allowlistedArgv("echo $(whoami)")).toBeUndefined();
     expect(allowlistedArgv("npm test")).toEqual(["npm", "test"]);
     expect(allowlistedArgv("python -m pytest")).toEqual(["python", "-m", "pytest"]);
+    expect(allowlistedArgv("mix test")).toEqual(["mix", "test"]);
+    expect(allowlistedArgv("mvn test")).toEqual(["mvn", "test"]);
+    expect(allowlistedArgv("mix test --cover")).toBeUndefined();
+    expect(allowlistedArgv("mvn test -DskipTests=false")).toBeUndefined();
+    expect(allowlistedArgv("mix test && rm -rf /tmp/fixture")).toBeUndefined();
+    expect(allowlistedArgv("mvn test | sh")).toBeUndefined();
+    expect(allowlistedArgv("mix test $(touch /tmp/fixture)")).toBeUndefined();
   });
 
   it("T2: unknown contribkit.yml keys are needs-human and never execute", async () => {

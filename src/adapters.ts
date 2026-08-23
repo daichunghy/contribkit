@@ -13,7 +13,12 @@ import { isRecord, type ContractRule, type Severity } from "./types.js";
 
 export interface AdapterManifest {
   id: string;
-  match: { filesAny: string[]; packageManager?: PackageManager; excludePackageManagers?: PackageManager[] };
+  match: {
+    filesAny: string[];
+    packageManager?: PackageManager;
+    excludePackageManagers?: PackageManager[];
+    excludeFilesAny?: string[];
+  };
   testCommand: string;
   maxDiffLines: number | null;
 }
@@ -50,6 +55,12 @@ function parseManifest(raw: unknown, folder: string): AdapterManifest | undefine
     (item): item is PackageManager => item === "npm" || item === "pnpm" || item === "yarn" || item === "bun",
   );
   if (excluded !== undefined && excludePackageManagers?.length !== excluded.length) return undefined;
+  const excludedFiles = match.excludeFilesAny;
+  if (excludedFiles !== undefined && !Array.isArray(excludedFiles)) return undefined;
+  const excludeFilesAny = excludedFiles?.filter(
+    (item): item is string => typeof item === "string" && item.length > 0,
+  );
+  if (excludedFiles !== undefined && excludeFilesAny?.length !== excludedFiles.length) return undefined;
   if (typeof raw.testCommand !== "string" || raw.testCommand.trim().length === 0) return undefined;
   const maxDiffLines = raw.maxDiffLines === null || raw.maxDiffLines === undefined
     ? null
@@ -63,6 +74,7 @@ function parseManifest(raw: unknown, folder: string): AdapterManifest | undefine
       filesAny,
       ...(packageManager !== undefined ? { packageManager } : {}),
       ...(excludePackageManagers !== undefined ? { excludePackageManagers } : {}),
+      ...(excludeFilesAny !== undefined ? { excludeFilesAny } : {}),
     },
     testCommand: raw.testCommand.trim(),
     maxDiffLines,
@@ -98,6 +110,9 @@ async function matchingAdapterFile(
   ref: string,
   match: AdapterManifest["match"],
 ): Promise<{ path: string; text: string } | undefined> {
+  for (const path of match.excludeFilesAny ?? []) {
+    if (await firstExisting(repoPath, ref, [path])) return undefined;
+  }
   for (const path of match.filesAny) {
     const hit = await firstExisting(repoPath, ref, [path]);
     if (hit === undefined) continue;

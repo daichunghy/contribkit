@@ -1,6 +1,10 @@
 {
   "id": "node-npm-test",
-  "match": { "filesAny": ["package.json"], "excludePackageManagers": ["bun"] },
+  "match": {
+    "filesAny": ["package.json"],
+    "excludePackageManagers": ["bun"],
+    "excludeFilesAny": ["bun.lockb", "bun.lock"]
+  },
   "testCommand": "npm test",
   "maxDiffLines": null
 }
