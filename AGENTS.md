@@ -10,7 +10,7 @@ npm run verify
 npx contribkit preflight --repo . --base HEAD
 ```
 
-The current GitHub release is `contribkit@0.1.0-alpha.5`; npm still serves alpha.3 until OTP publication completes. Do not claim the Anthropic community plugin catalog or Claude-for-OSS eligibility.
+The current GitHub release is `contribkit@0.1.0-alpha.6`; npm still serves alpha.3 until OTP publication completes. Do not claim the Anthropic community plugin catalog or Claude-for-OSS eligibility.
 
 ## Rules
 

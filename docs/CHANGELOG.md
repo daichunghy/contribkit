@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.6
+
+- Synchronize the current CLI/plugin/package identity and use the GitHub tag path until npm OTP publication completes.
+- Make every public quickstart command runnable from the clean clone without resolving stale npm alpha3.
+
 ## 0.1.0-alpha.5
 
 - Synchronize runtime CLI, package metadata, Claude plugin metadata, and GitHub release identity.

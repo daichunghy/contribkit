@@ -14,7 +14,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 describe("P0 skeleton", () => {
   it("exports a version and schema ids", () => {
-    expect(VERSION).toBe("0.1.0-alpha.5");
+    expect(VERSION).toBe("0.1.0-alpha.6");
     expect(SCHEMA_CONTRACT).toBe("contribkit.contract.v1");
     expect(SCHEMA_RECEIPT).toBe("contribkit.receipt.v1");
     expect(SCHEMA_POLICY).toBe("contribkit.policy.v1");
@@ -26,9 +26,9 @@ describe("P0 skeleton", () => {
     expect(isDirectRun("/tmp/unrelated.js")).toBe(false);
   });
 
-  it("documents the published npm package without a marketplace catalog claim", () => {
+  it("documents the current GitHub alpha without a marketplace catalog claim", () => {
     const readme = readFileSync(join(root, "README.md"), "utf8");
-    expect(readme).toMatch(/npx contribkit/);
+    expect(readme).toMatch(/node dist\/src\/cli\.js/);
     expect(readme).toMatch(/img\.shields\.io\/npm\/v\/contribkit/);
     expect(readme).not.toMatch(/Not on npm/);
     expect(readme).not.toMatch(/claude-plugins-community catalog/);

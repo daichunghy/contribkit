@@ -10,8 +10,8 @@ Do not open a pull request until this skill reports `pass` or the user explicitl
 This plugin is not in the Anthropic community catalog. CLI:
 
 ```sh
-npx contribkit compile --repo . --out /tmp/contract.json
-npx contribkit preflight --repo . --base HEAD
+node dist/src/cli.js compile --repo . --out /tmp/contract.json
+node dist/src/cli.js preflight --repo . --base HEAD
 ```
 
 A tree with no diff against `--base` should `pass`. `command_recorded` and PR-body checks apply only when there are local changes.

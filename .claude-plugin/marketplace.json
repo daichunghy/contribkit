@@ -12,7 +12,7 @@
       "name": "contribkit",
       "source": "./",
       "description": "Preflight a contribution against the target repo contract before opening a pull request.",
-      "version": "0.1.0-alpha.5",
+      "version": "0.1.0-alpha.6",
       "author": {
         "name": "daichunghy"
       },

@@ -11,10 +11,10 @@ contribkit is a **contribution preflight** for coding agents and humans. It comp
 
 This is **not** contributor-image generation ([LizardByte/contribkit](https://github.com/LizardByte/contribkit)), not a contribution-proposal bot ([vidiyala99/contribkit](https://github.com/vidiyala99/contribkit)), and not a GitHub merge gate ([PatchGate](https://github.com/daichunghy/patchgate)).
 
-**Status:** `0.1.0-alpha.5` on GitHub main. npm currently serves alpha.3; alpha5 publication requires OTP. Not in the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility claim.
+**Status:** `0.1.0-alpha.6` on GitHub main. npm currently serves alpha.3; alpha6 publication requires OTP. Not in the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility claim.
 
 ```sh
-git clone --branch v0.1.0-alpha.5 https://github.com/daichunghy/contribkit.git
+git clone --branch v0.1.0-alpha.6 https://github.com/daichunghy/contribkit.git
 cd contribkit
 npm ci
 npm run verify
@@ -26,9 +26,9 @@ A clean clone against `HEAD` should print `contribkit pass`. There is no pull re
 When you have local changes, record tests (opt-in) or the receipt stays `blocked` until a passing allowlisted command is recorded:
 
 ```sh
-npx contribkit preflight --repo . --base HEAD --run-tests
-npx contribkit preflight --repo . --base HEAD --body-file /tmp/pr.md --out /tmp/receipt.json
-npx contribkit explain /tmp/receipt.json
+node dist/src/cli.js preflight --repo . --base HEAD --run-tests
+node dist/src/cli.js preflight --repo . --base HEAD --body-file /tmp/pr.md --out /tmp/receipt.json
+node dist/src/cli.js explain /tmp/receipt.json
 ```
 
 Library:
@@ -57,7 +57,7 @@ Claude Code plugin (local marketplace, not the Anthropic catalog):
 - Extractors 1–10 (license, PR checkboxes, issue link, CODEOWNERS, size, workflow paths, recorded tests, AI disclosure, DCO, `contribkit.yml`)
 - Golden fixtures under `fixtures/repos/`
 - Claude plugin: `.claude-plugin/plugin.json`, `skills/*`, `hooks/hooks.json` (Bash|PowerShell `gh`/`glab` **and** `mcp__.*__create_pull_request`)
-- MCP stdio: `npx contribkit mcp` tools `compile_contract`, `preflight_diff`, `explain_receipt`
+- MCP stdio: `node dist/src/cli.js mcp` tools `compile_contract`, `preflight_diff`, `explain_receipt`
 - Bundled adapters: `python-pytest`, `node-npm-test`, `go-test` (advisory `command_recorded` only unless `blockAdapters`)
 
 ## What is not shipped
