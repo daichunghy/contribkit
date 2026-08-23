@@ -14,7 +14,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 describe("P0 skeleton", () => {
   it("exports a version and schema ids", () => {
-    expect(VERSION).toBe("0.1.0-alpha.6");
+    expect(VERSION).toBe("0.1.0-alpha.7");
     expect(SCHEMA_CONTRACT).toBe("contribkit.contract.v1");
     expect(SCHEMA_RECEIPT).toBe("contribkit.receipt.v1");
     expect(SCHEMA_POLICY).toBe("contribkit.policy.v1");

@@ -1,7 +1,7 @@
 {
   "name": "contribkit",
   "description": "Preflight a contribution against the target repo contract before opening a pull request.",
-  "version": "0.1.0-alpha.6",
+  "version": "0.1.0-alpha.7",
   "author": { "name": "daichunghy" },
   "homepage": "https://github.com/daichunghy/contribkit",
   "repository": "https://github.com/daichunghy/contribkit",

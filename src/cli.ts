@@ -41,7 +41,7 @@ function help(): string {
     "--run-tests is opt-in and only executes allowlisted argv (no pipes, &&, or $()).",
     "",
     "Install: clone the release tag, npm ci, npm run build,",
-    "then node dist/src/cli.js <command>. npm alpha publication is pending OTP.",
+    "then node dist/src/cli.js <command>. npm alpha: contribkit@0.1.0-alpha.7.",
   ].join("\n");
 }
 

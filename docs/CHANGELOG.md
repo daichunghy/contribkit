@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.7
+
+- Publish the synchronized CLI, plugin, and package identity to npm.
+- Keep the Claude Code plugin explicitly separate from Anthropic's official catalog and Claude-for-OSS eligibility.
+
 ## 0.1.0-alpha.6
 
 - Synchronize the current CLI/plugin/package identity and use the GitHub tag path until npm OTP publication completes.
