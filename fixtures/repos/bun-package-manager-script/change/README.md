@@ -1,0 +1,1 @@
+Bun compiler inference fixture.

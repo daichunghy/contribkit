@@ -13,7 +13,11 @@ export const TEST_ARGV_FAMILIES: readonly (readonly string[])[] = [
   ["python", "-m", "pytest"],
   ["cargo", "test"],
   ["go", "test"],
+  ["bun", "test"],
+  ["deno", "test"],
 ];
+
+export type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
 
 const SHELL_META = /[|;&`$<>()]/;
 
@@ -54,6 +58,30 @@ export function allowlistedArgv(command: string): string[] | undefined {
   return argv.length === family.length ? [...argv] : undefined;
 }
 
+export function packageManagerFromPackageJson(text: string): PackageManager | undefined {
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return undefined;
+    const value = (parsed as Record<string, unknown>).packageManager;
+    if (typeof value !== "string") return undefined;
+    const managers: readonly PackageManager[] = ["npm", "pnpm", "yarn", "bun"];
+    for (const manager of managers) {
+      if (value === manager) return manager;
+      if (value.startsWith(`${manager}@`) && value.length > manager.length + 1) return manager;
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function packageManagerMatches(
+  packageJson: string,
+  expected: PackageManager,
+): boolean {
+  return packageManagerFromPackageJson(packageJson) === expected;
+}
+
 export function commandsEquivalent(recorded: string, required: string): boolean {
   const rec = tokenizeArgv(recorded);
   const req = tokenizeArgv(required);
@@ -68,16 +96,19 @@ export function commandsEquivalent(recorded: string, required: string): boolean 
 
 export function inferTestCommand(hints: {
   policyCommand?: string;
-  packageManager?: "npm" | "pnpm" | "yarn";
+  packageManager?: PackageManager;
   hasNpmTestScript?: boolean;
   mentionsPytest?: boolean;
   mentionsCargo?: boolean;
   mentionsGo?: boolean;
+  mentionsBun?: boolean;
+  mentionsDeno?: boolean;
 }): string | undefined {
   if (hints.policyCommand !== undefined) {
     return allowlistedArgv(hints.policyCommand) ? hints.policyCommand.trim() : undefined;
   }
   if (hints.hasNpmTestScript) {
+    if (hints.packageManager === "bun") return "bun test";
     if (hints.packageManager === "pnpm") return "pnpm test";
     if (hints.packageManager === "yarn") return "yarn test";
     return "npm test";
@@ -85,5 +116,7 @@ export function inferTestCommand(hints: {
   if (hints.mentionsPytest) return "pytest";
   if (hints.mentionsCargo) return "cargo test";
   if (hints.mentionsGo) return "go test";
+  if (hints.mentionsBun) return "bun test";
+  if (hints.mentionsDeno) return "deno test";
   return undefined;
 }

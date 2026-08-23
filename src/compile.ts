@@ -1,6 +1,11 @@
 import { resolve } from "node:path";
 import { compareTextUnit, digestText } from "./canonical.js";
-import { allowlistedArgv, inferTestCommand } from "./allowlist.js";
+import {
+  allowlistedArgv,
+  inferTestCommand,
+  packageManagerFromPackageJson,
+  type PackageManager,
+} from "./allowlist.js";
 import { parseCodeowners } from "./codeowners.js";
 import { parsePolicyYaml } from "./policy.js";
 import {
@@ -25,7 +30,7 @@ const SIZE_FILES = /\b(?:under|at most|max(?:imum)?|no more than)\s+(\d+)\s+file
 const SIZE_LINES = /\b(?:under|at most|max(?:imum)?|no more than)\s+(\d+)\s+(?:diff\s+)?lines?\b/i;
 const TEST_COMMAND_LINE = /(?:^|\n)\s*test(?:s)?\s*[:=]\s*(.+)/i;
 const ALLOWED_TEST_MENTION =
-  /\b(npm test|npm run test|pnpm test|yarn test|pytest|python -m pytest|cargo test|go test)\b/i;
+  /\b(npm test|npm run test|pnpm test|yarn test|pytest|python -m pytest|cargo test|go test|bun test|deno test)\b/i;
 const AI_REQUIRE =
   /(?:\b(ai|llm|claude|codex)\b.{0,80}\b(disclos|must mention|required|declare)\b|\b(disclos|must mention|declare).{0,80}\b(ai|llm|claude|codex)\b)/i;
 const DCO_REQUIRE = /(?:require[sd]?|must).{0,40}signed-off-by|signed-off-by.{0,40}(?:required|must)/i;
@@ -53,7 +58,11 @@ function addSource(sources: ContractSource[], path: string, text: string): void 
   sources.push({ path, digest: digestText(text) });
 }
 
-function parsePackageScripts(text: string): { hasTest: boolean; mentionsPytest: boolean } {
+function parsePackageScripts(text: string): {
+  hasTest: boolean;
+  mentionsPytest: boolean;
+  packageManager?: PackageManager;
+} {
   try {
     const parsed: unknown = JSON.parse(text);
     if (!isRecord(parsed)) return { hasTest: false, mentionsPytest: false };
@@ -69,7 +78,12 @@ function parsePackageScripts(text: string): { hasTest: boolean; mentionsPytest: 
       }
       if (/\bpytest\b/i.test(value) || /\bpytest\b/i.test(name)) mentionsPytest = true;
     }
-    return { hasTest, mentionsPytest };
+    const packageManager = packageManagerFromPackageJson(text);
+    return {
+      hasTest,
+      mentionsPytest,
+      ...(packageManager !== undefined ? { packageManager } : {}),
+    };
   } catch {
     return { hasTest: false, mentionsPytest: false };
   }
@@ -326,20 +340,28 @@ export async function compile(options: CompileOptions): Promise<ContributionCont
   const policyCommand = policy?.test?.command;
   const skipRecord = policy?.test?.record === false;
   if (mentionsTest || policyCommand !== undefined) {
-    const inferred = inferTestCommand({
-      ...(policyCommand !== undefined ? { policyCommand } : {}),
-      ...(pnpmLock
-        ? { packageManager: "pnpm" as const }
+    const packageManager =
+      scripts.packageManager ??
+      (pnpmLock
+        ? ("pnpm" as const)
         : yarnLock
-          ? { packageManager: "yarn" as const }
+          ? ("yarn" as const)
           : npmLock || packageJson
-            ? { packageManager: "npm" as const }
-            : {}),
-      hasNpmTestScript: scripts.hasTest,
-      mentionsPytest: scripts.mentionsPytest || /\bpytest\b/i.test(contribText) || pytestHint !== undefined,
-      mentionsCargo: /\bcargo test\b/i.test(contribText) || cargoHint !== undefined,
-      mentionsGo: /\bgo test\b/i.test(contribText) || goHint !== undefined,
-    });
+            ? ("npm" as const)
+            : undefined);
+    const inferred =
+      unsafe !== undefined && !unsafeAllowlisted
+        ? undefined
+        : inferTestCommand({
+            ...(policyCommand !== undefined ? { policyCommand } : {}),
+            ...(packageManager !== undefined ? { packageManager } : {}),
+            hasNpmTestScript: scripts.hasTest,
+            mentionsPytest: scripts.mentionsPytest || /\bpytest\b/i.test(contribText) || pytestHint !== undefined,
+            mentionsCargo: /\bcargo test\b/i.test(contribText) || cargoHint !== undefined,
+            mentionsGo: /\bgo test\b/i.test(contribText) || goHint !== undefined,
+            mentionsBun: /\bbun test\b/i.test(contribText),
+            mentionsDeno: /\bdeno test\b/i.test(contribText),
+          });
     if (unsafe !== undefined && !unsafeAllowlisted) {
       compiled.push(
         makeRule({
@@ -382,7 +404,7 @@ export async function compile(options: CompileOptions): Promise<ContributionCont
           origin: contributing?.path ?? "tests",
           check: "command_recorded",
           message:
-            "Tests are mentioned but no allowlisted command could be inferred. Record npm test / pytest / cargo test / go test with exit 0.",
+            "Tests are mentioned but no allowlisted command could be inferred. Record npm test / pytest / cargo test / go test / bun test / deno test with exit 0.",
         }),
       );
     }

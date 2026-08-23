@@ -1,0 +1,9 @@
+{
+  "id": "bun-test",
+  "match": {
+    "filesAny": ["bun.lockb", "bun.lock", "package.json"],
+    "packageManager": "bun"
+  },
+  "testCommand": "bun test",
+  "maxDiffLines": null
+}

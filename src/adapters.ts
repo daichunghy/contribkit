@@ -1,14 +1,19 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { allowlistedArgv, commandsEquivalent } from "./allowlist.js";
+import {
+  allowlistedArgv,
+  commandsEquivalent,
+  packageManagerMatches,
+  type PackageManager,
+} from "./allowlist.js";
 import { compareTextUnit } from "./canonical.js";
 import { firstExisting } from "./repo.js";
 import { isRecord, type ContractRule, type Severity } from "./types.js";
 
 export interface AdapterManifest {
   id: string;
-  match: { filesAny: string[] };
+  match: { filesAny: string[]; packageManager?: PackageManager; excludePackageManagers?: PackageManager[] };
   testCommand: string;
   maxDiffLines: number | null;
 }
@@ -37,6 +42,14 @@ function parseManifest(raw: unknown, folder: string): AdapterManifest | undefine
   if (!isRecord(match) || !Array.isArray(match.filesAny) || match.filesAny.length === 0) return undefined;
   const filesAny = match.filesAny.filter((item): item is string => typeof item === "string" && item.length > 0);
   if (filesAny.length === 0) return undefined;
+  const packageManager = match.packageManager;
+  if (packageManager !== undefined && packageManager !== "bun") return undefined;
+  const excluded = match.excludePackageManagers;
+  if (excluded !== undefined && !Array.isArray(excluded)) return undefined;
+  const excludePackageManagers = excluded?.filter(
+    (item): item is PackageManager => item === "npm" || item === "pnpm" || item === "yarn" || item === "bun",
+  );
+  if (excluded !== undefined && excludePackageManagers?.length !== excluded.length) return undefined;
   if (typeof raw.testCommand !== "string" || raw.testCommand.trim().length === 0) return undefined;
   const maxDiffLines = raw.maxDiffLines === null || raw.maxDiffLines === undefined
     ? null
@@ -44,7 +57,16 @@ function parseManifest(raw: unknown, folder: string): AdapterManifest | undefine
       ? raw.maxDiffLines
       : null;
   if (raw.id !== folder) return undefined;
-  return { id: raw.id, match: { filesAny }, testCommand: raw.testCommand.trim(), maxDiffLines };
+  return {
+    id: raw.id,
+    match: {
+      filesAny,
+      ...(packageManager !== undefined ? { packageManager } : {}),
+      ...(excludePackageManagers !== undefined ? { excludePackageManagers } : {}),
+    },
+    testCommand: raw.testCommand.trim(),
+    maxDiffLines,
+  };
 }
 
 export function loadBundledAdapters(): AdapterManifest[] {
@@ -71,6 +93,23 @@ export function loadBundledAdapters(): AdapterManifest[] {
   return loaded;
 }
 
+async function matchingAdapterFile(
+  repoPath: string,
+  ref: string,
+  match: AdapterManifest["match"],
+): Promise<{ path: string; text: string } | undefined> {
+  for (const path of match.filesAny) {
+    const hit = await firstExisting(repoPath, ref, [path]);
+    if (hit === undefined) continue;
+    if (path === "package.json") {
+      if (match.packageManager !== undefined && !packageManagerMatches(hit.text, match.packageManager)) continue;
+      if (match.excludePackageManagers?.some((item) => packageManagerMatches(hit.text, item))) continue;
+    }
+    return hit;
+  }
+  return undefined;
+}
+
 export async function adapterRules(options: {
   repoPath: string;
   ref: string;
@@ -79,7 +118,7 @@ export async function adapterRules(options: {
 }): Promise<ContractRule[]> {
   const rules: ContractRule[] = [];
   for (const adapter of loadBundledAdapters()) {
-    const hit = await firstExisting(options.repoPath, options.ref, adapter.match.filesAny);
+    const hit = await matchingAdapterFile(options.repoPath, options.ref, adapter.match);
     if (hit === undefined) continue;
     const argv = allowlistedArgv(adapter.testCommand);
     if (argv === undefined) {

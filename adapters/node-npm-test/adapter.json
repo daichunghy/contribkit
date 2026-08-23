@@ -1,6 +1,6 @@
 {
   "id": "node-npm-test",
-  "match": { "filesAny": ["package.json"] },
+  "match": { "filesAny": ["package.json"], "excludePackageManagers": ["bun"] },
   "testCommand": "npm test",
   "maxDiffLines": null
 }
