@@ -1,0 +1,6 @@
+{
+  "id": "swift-test",
+  "match": { "filesAny": ["Package.swift"] },
+  "testCommand": "swift test",
+  "maxDiffLines": null
+}

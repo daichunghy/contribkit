@@ -49,7 +49,7 @@ Claude Code plugin (local marketplace, not the Anthropic catalog):
 
 `--json` prints machine-readable contract or receipt JSON. Preflight exit codes: `blocked` → 1; `pass` and `needs-human` → 0. `--repo` must be a git clone root, not a nested folder of another repository.
 
-`--run-tests` is opt-in. It only executes allowlisted argv (`npm test`, `npm run test`, `pnpm test`, `yarn test`, `pytest`, `python -m pytest`, `cargo test`, `go test`). No pipes, no `&&`, no `$()`. Default preflight only *records* commands already supplied; it does not run the target repository.
+`--run-tests` is opt-in. It only executes exact allowlisted argv (`npm test`, `npm run test`, `pnpm test`, `yarn test`, `pytest`, `python -m pytest`, `cargo test`, `go test`, `swift test`). No pipes, no `&&`, no `$()`, shell expansion, or extra arguments. Default preflight only *records* commands already supplied; it does not run the target repository.
 
 `CONTRIBKIT_ALLOW=1` sets `receipt.overridden = true`. It does not rewrite tool argv.
 
@@ -61,7 +61,7 @@ Claude Code plugin (local marketplace, not the Anthropic catalog):
 - Golden fixtures under `fixtures/repos/`
 - Claude plugin: `.claude-plugin/plugin.json`, `skills/*`, `hooks/hooks.json` (Bash|PowerShell `gh`/`glab` **and** `mcp__.*__create_pull_request`)
 - MCP stdio: `node dist/src/cli.js mcp` tools `compile_contract`, `preflight_diff`, `explain_receipt`
-- Bundled adapters: `python-pytest`, `node-npm-test`, `go-test` (advisory `command_recorded` only unless `blockAdapters`)
+- Bundled adapters: `python-pytest`, `node-npm-test`, `go-test`, `swift-test` (advisory `command_recorded` only unless `blockAdapters`)
 - Adapter authoring guide: [docs/ADAPTER_AUTHORING.md](docs/ADAPTER_AUTHORING.md)
 
 ## What is not shipped

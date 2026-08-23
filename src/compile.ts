@@ -25,7 +25,7 @@ const SIZE_FILES = /\b(?:under|at most|max(?:imum)?|no more than)\s+(\d+)\s+file
 const SIZE_LINES = /\b(?:under|at most|max(?:imum)?|no more than)\s+(\d+)\s+(?:diff\s+)?lines?\b/i;
 const TEST_COMMAND_LINE = /(?:^|\n)\s*test(?:s)?\s*[:=]\s*(.+)/i;
 const ALLOWED_TEST_MENTION =
-  /\b(npm test|npm run test|pnpm test|yarn test|pytest|python -m pytest|cargo test|go test)\b/i;
+  /\b(npm test|npm run test|pnpm test|yarn test|pytest|python -m pytest|cargo test|go test|swift test)\b/i;
 const AI_REQUIRE =
   /(?:\b(ai|llm|claude|codex)\b.{0,80}\b(disclos|must mention|required|declare)\b|\b(disclos|must mention|declare).{0,80}\b(ai|llm|claude|codex)\b)/i;
 const DCO_REQUIRE = /(?:require[sd]?|must).{0,40}signed-off-by|signed-off-by.{0,40}(?:required|must)/i;
@@ -339,6 +339,7 @@ export async function compile(options: CompileOptions): Promise<ContributionCont
       mentionsPytest: scripts.mentionsPytest || /\bpytest\b/i.test(contribText) || pytestHint !== undefined,
       mentionsCargo: /\bcargo test\b/i.test(contribText) || cargoHint !== undefined,
       mentionsGo: /\bgo test\b/i.test(contribText) || goHint !== undefined,
+      mentionsSwift: /\bswift test\b/i.test(contribText),
     });
     if (unsafe !== undefined && !unsafeAllowlisted) {
       compiled.push(
@@ -382,7 +383,7 @@ export async function compile(options: CompileOptions): Promise<ContributionCont
           origin: contributing?.path ?? "tests",
           check: "command_recorded",
           message:
-            "Tests are mentioned but no allowlisted command could be inferred. Record npm test / pytest / cargo test / go test with exit 0.",
+            "Tests are mentioned but no allowlisted command could be inferred. Record npm test / pytest / cargo test / go test / swift test with exit 0.",
         }),
       );
     }

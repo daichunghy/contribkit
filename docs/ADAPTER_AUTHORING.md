@@ -18,7 +18,7 @@ Create `adapters/<id>/adapter.json`:
 ```
 
 The `id` must equal the directory name. `match.filesAny` is a non-empty list of repository paths;
-`testCommand` must be one of the existing command shapes accepted by `src/allowlist.ts`. An adapter
+`testCommand` must be one of the exact command shapes accepted by `src/allowlist.ts`. An adapter
 with an unknown command is reported as `needs-human` and is never executed. `maxDiffLines` is
 reserved for the contract rule that evaluates patch size; use `null` when the adapter has no limit.
 
@@ -38,5 +38,5 @@ PR description must state whether the adapter is advisory or listed in `blockAda
 is advisory so a new ecosystem adapter cannot silently block a contribution. Keep the command
 recorded in the receipt and let the maintainer decide whether it belongs in a blocking policy.
 
-The current bundled set is `python-pytest`, `node-npm-test`, and `go-test`. New adapters should have
+The current bundled set is `python-pytest`, `node-npm-test`, `go-test`, and `swift-test`. New adapters should have
 a real repository shape to match and should not be added only to increase the adapter count.

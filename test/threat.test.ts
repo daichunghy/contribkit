@@ -46,6 +46,11 @@ describe("threat model", () => {
     expect(allowlistedArgv("echo $(whoami)")).toBeUndefined();
     expect(allowlistedArgv("npm test")).toEqual(["npm", "test"]);
     expect(allowlistedArgv("python -m pytest")).toEqual(["python", "-m", "pytest"]);
+    expect(allowlistedArgv("swift test")).toEqual(["swift", "test"]);
+    expect(hasShellMeta("swift test *")).toBe(true);
+    for (const command of ["swift testing", "swift test --parallel", "swift test *", "swift test | cat"]) {
+      expect(allowlistedArgv(command)).toBeUndefined();
+    }
   });
 
   it("T2: unknown contribkit.yml keys are needs-human and never execute", async () => {
