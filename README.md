@@ -88,6 +88,8 @@ It does **not** decide whether code is correct, written by AI, or merge-worthy.
 If one preflight run saved you a rejected pull request, star the repository. It
 helps other contributors find the check.
 
+Release history: [CHANGELOG.md](CHANGELOG.md).
+
 ## Security
 
 See [SECURITY.md](.github/SECURITY.md) and [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).
