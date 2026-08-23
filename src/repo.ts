@@ -106,6 +106,7 @@ export async function readAtRef(
     if (shown.code === 0) {
       return shown.stdout.length > TEXT_CAP ? shown.stdout.slice(0, TEXT_CAP) : shown.stdout;
     }
+    return undefined;
   }
   const abs = join(repoPath, filePath);
   if (!existsSync(abs)) return undefined;
@@ -113,8 +114,7 @@ export async function readAtRef(
     const info = await stat(abs);
     if (!info.isFile()) return undefined;
     const buf = await readFile(abs);
-    const text = buf.subarray(0, TEXT_CAP).toString("utf8");
-    return text;
+    return buf.subarray(0, TEXT_CAP).toString("utf8");
   } catch {
     return undefined;
   }

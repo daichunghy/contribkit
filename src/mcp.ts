@@ -36,7 +36,7 @@ function recordedCommandsOf(value: unknown): RecordedCommand[] | undefined {
   const out: RecordedCommand[] = [];
   for (const item of value) {
     if (!isRecord(item) || typeof item.command !== "string" || typeof item.exitCode !== "number") continue;
-    const entry: RecordedCommand = { command: item.command, exitCode: item.exitCode };
+    const entry: RecordedCommand = { command: item.command, exitCode: item.exitCode, source: "reported" };
     if (typeof item.logDigest === "string") entry.logDigest = item.logDigest;
     out.push(entry);
   }
@@ -180,6 +180,9 @@ export async function runMcpStdio(
   let buffer = Buffer.alloc(0);
   for await (const chunk of input) {
     buffer = Buffer.concat([buffer, Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk))]);
+    if (buffer.length > 4_000_000) {
+      throw new Error("MCP input exceeds the 4 MB frame buffer limit.");
+    }
     while (true) {
       const headerEnd = buffer.indexOf("\r\n\r\n");
       if (headerEnd === -1) break;
@@ -190,6 +193,9 @@ export async function runMcpStdio(
         continue;
       }
       const length = Number.parseInt(lengthMatch[1], 10);
+      if (!Number.isSafeInteger(length) || length < 0 || length > 1_000_000) {
+        throw new Error("MCP Content-Length exceeds the 1 MB frame limit.");
+      }
       const bodyStart = headerEnd + 4;
       if (buffer.length < bodyStart + length) break;
       const body = buffer.subarray(bodyStart, bodyStart + length).toString("utf8");

@@ -4,6 +4,7 @@
  * and CONTRIBKIT_ALLOW is unset. Does not rewrite argv.
  */
 import { preflight } from "./preflight.js";
+import { git } from "./repo.js";
 import { isRecord } from "./types.js";
 
 async function readStdin(): Promise<string> {
@@ -28,21 +29,54 @@ function deny(reason: string): void {
 async function main(): Promise<void> {
   const raw = await readStdin();
   let cwd = process.cwd();
+  let parsed: Record<string, unknown> | undefined;
   if (raw.trim().length > 0) {
     try {
-      const parsed: unknown = JSON.parse(raw);
-      if (isRecord(parsed) && typeof parsed.cwd === "string" && parsed.cwd.length > 0) {
+      const candidate: unknown = JSON.parse(raw);
+      if (isRecord(candidate)) {
+        parsed = candidate;
+      }
+      if (parsed && typeof parsed.cwd === "string" && parsed.cwd.length > 0) {
         cwd = parsed.cwd;
       }
     } catch {
-      // Non-JSON stdin is ignored; still preflight cwd.
+      deny("contribkit hook could not parse its JSON input");
+      return;
     }
   }
+
+  const requestedBase =
+    (parsed && typeof parsed.baseRef === "string" && parsed.baseRef) ||
+    (parsed && typeof parsed.base_ref === "string" && parsed.base_ref) ||
+    process.env.CONTRIBKIT_BASE_REF;
+  const candidates = [requestedBase, "origin/main", "origin/HEAD", "main", "HEAD~1"].filter(
+    (item): item is string => typeof item === "string" && item.length > 0,
+  );
+  let baseRef: string | undefined;
+  for (const candidate of candidates) {
+    const result = await git(cwd, ["rev-parse", "--verify", candidate]);
+    if (result.code === 0) {
+      baseRef = candidate;
+      break;
+    }
+  }
+  if (baseRef === undefined) {
+    deny("contribkit could not determine a trusted base ref; set CONTRIBKIT_BASE_REF");
+    return;
+  }
+
+  const nestedToolInput = parsed && isRecord(parsed.tool_input) ? parsed.tool_input : undefined;
+  const prBodyDraft =
+    (parsed && typeof parsed.prBodyDraft === "string" && parsed.prBodyDraft) ||
+    (parsed && typeof parsed.body === "string" && parsed.body) ||
+    (nestedToolInput && typeof nestedToolInput.body === "string" && nestedToolInput.body) ||
+    undefined;
 
   const allow = process.env.CONTRIBKIT_ALLOW === "1";
   const { receipt } = await preflight({
     repoPath: cwd,
-    baseRef: "HEAD",
+    baseRef,
+    ...(prBodyDraft !== undefined ? { prBodyDraft } : {}),
     overridden: allow,
   });
 

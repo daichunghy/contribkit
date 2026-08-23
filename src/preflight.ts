@@ -20,11 +20,37 @@ export async function spawnArgv(
   if (cmd === undefined) return { exitCode: 1, stdout: "", stderr: "empty argv" };
   const args = argv.slice(1);
   return await new Promise((resolvePromise, reject) => {
-    const child = spawn(cmd, args, { cwd, shell: false, env: process.env });
+    const child = spawn(cmd, args, {
+      cwd,
+      shell: false,
+      env: {
+        PATH: process.env.PATH ?? "",
+        CI: "1",
+        LANG: "C",
+        LC_ALL: "C",
+        TMPDIR: process.env.TMPDIR ?? "/tmp",
+        npm_config_userconfig: "/dev/null",
+      },
+    });
     const out: Buffer[] = [];
     const err: Buffer[] = [];
-    child.stdout.on("data", (chunk: Buffer) => out.push(chunk));
-    child.stderr.on("data", (chunk: Buffer) => err.push(chunk));
+    let outSize = 0;
+    let errSize = 0;
+    const outputCap = 256_000;
+    child.stdout.on("data", (chunk: Buffer) => {
+      if (outSize < outputCap) {
+        const next = chunk.subarray(0, outputCap - outSize);
+        out.push(next);
+        outSize += next.length;
+      }
+    });
+    child.stderr.on("data", (chunk: Buffer) => {
+      if (errSize < outputCap) {
+        const next = chunk.subarray(0, outputCap - errSize);
+        err.push(next);
+        errSize += next.length;
+      }
+    });
     child.on("error", reject);
     const timer = setTimeout(() => {
       child.kill("SIGTERM");
@@ -72,6 +98,7 @@ async function maybeRunTests(
     const entry: RecordedCommand = {
       command: argv.join(" "),
       exitCode: result.exitCode,
+      source: "executed",
       logDigest: digestText(log),
     };
     recorded.push(entry);
@@ -80,6 +107,7 @@ async function maybeRunTests(
     recorded.push({
       command: argv.join(" "),
       exitCode: 127,
+      source: "executed",
       logDigest: digestText(redactSecrets(message)),
     });
   }

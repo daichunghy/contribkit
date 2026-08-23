@@ -64,6 +64,7 @@ export interface PathDiff {
 export interface RecordedCommand {
   command: string;
   exitCode: number;
+  source: "executed" | "reported";
   logDigest?: string;
 }
 

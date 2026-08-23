@@ -87,7 +87,7 @@ export function makeContract(
 }
 
 export function recorded(command: string, exitCode: number, logDigest?: string): RecordedCommand {
-  const item: RecordedCommand = { command, exitCode };
+  const item: RecordedCommand = { command, exitCode, source: "executed" };
   if (logDigest !== undefined) item.logDigest = logDigest;
   return item;
 }

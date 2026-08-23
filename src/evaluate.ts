@@ -113,7 +113,7 @@ function checkPasses(rule: ContractRule, snapshot: EvaluationSnapshot): boolean 
       const required = rule.command;
       if (required === undefined) return false;
       return snapshot.recordedCommands.some(
-        (recorded) => recorded.exitCode === 0 && commandsEquivalent(recorded.command, required),
+        (recorded) => recorded.source === "executed" && recorded.exitCode === 0 && commandsEquivalent(recorded.command, required),
       );
     }
     case "commit_signed_off":

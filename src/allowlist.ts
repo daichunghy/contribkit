@@ -1,8 +1,10 @@
 /**
  * Allowlisted test argv families (THREAT_MODEL T1).
- * Extra trailing arguments are permitted; pipes, `&&`, `$()`, and shell metacharacters are not.
+ * Only exact argv forms are permitted; pipes, `&&`, `$()`, and shell metacharacters are not.
  */
 export const TEST_ARGV_FAMILIES: readonly (readonly string[])[] = [
+  ["python", "-m", "pytest", "-q"],
+  ["pytest", "-q"],
   ["npm", "test"],
   ["npm", "run", "test"],
   ["pnpm", "test"],
@@ -49,7 +51,7 @@ export function allowlistedArgv(command: string): string[] | undefined {
   if (!argv) return undefined;
   const family = matchingFamily(argv);
   if (!family) return undefined;
-  return [...argv];
+  return argv.length === family.length ? [...argv] : undefined;
 }
 
 export function commandsEquivalent(recorded: string, required: string): boolean {
@@ -57,7 +59,7 @@ export function commandsEquivalent(recorded: string, required: string): boolean 
   const req = tokenizeArgv(required);
   if (!rec || !req) return false;
   if (!matchingFamily(rec) || !matchingFamily(req)) return false;
-  if (rec.length < req.length) return false;
+  if (rec.length !== req.length) return false;
   for (let i = 0; i < req.length; i += 1) {
     if (rec[i] !== req[i]) return false;
   }
