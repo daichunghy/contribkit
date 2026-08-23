@@ -13,6 +13,7 @@ export const TEST_ARGV_FAMILIES: readonly (readonly string[])[] = [
   ["python", "-m", "pytest"],
   ["cargo", "test"],
   ["go", "test"],
+  ["dotnet", "test"],
 ];
 
 const SHELL_META = /[|;&`$<>()]/;
@@ -73,6 +74,7 @@ export function inferTestCommand(hints: {
   mentionsPytest?: boolean;
   mentionsCargo?: boolean;
   mentionsGo?: boolean;
+  mentionsDotnet?: boolean;
 }): string | undefined {
   if (hints.policyCommand !== undefined) {
     return allowlistedArgv(hints.policyCommand) ? hints.policyCommand.trim() : undefined;
@@ -85,5 +87,6 @@ export function inferTestCommand(hints: {
   if (hints.mentionsPytest) return "pytest";
   if (hints.mentionsCargo) return "cargo test";
   if (hints.mentionsGo) return "go test";
+  if (hints.mentionsDotnet) return "dotnet test";
   return undefined;
 }

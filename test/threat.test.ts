@@ -46,6 +46,9 @@ describe("threat model", () => {
     expect(allowlistedArgv("echo $(whoami)")).toBeUndefined();
     expect(allowlistedArgv("npm test")).toEqual(["npm", "test"]);
     expect(allowlistedArgv("python -m pytest")).toEqual(["python", "-m", "pytest"]);
+    expect(allowlistedArgv("dotnet test")).toEqual(["dotnet", "test"]);
+    expect(allowlistedArgv("dotnet test --no-restore")).toBeUndefined();
+    expect(allowlistedArgv("dotnet test && rm -rf /tmp/fixture")).toBeUndefined();
   });
 
   it("T2: unknown contribkit.yml keys are needs-human and never execute", async () => {
