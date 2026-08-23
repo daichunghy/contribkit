@@ -11,7 +11,7 @@ contribkit is a **contribution preflight** for coding agents and humans. It comp
 
 This is **not** contributor-image generation ([LizardByte/contribkit](https://github.com/LizardByte/contribkit)), not a contribution-proposal bot ([vidiyala99/contribkit](https://github.com/vidiyala99/contribkit)), and not a GitHub merge gate ([PatchGate](https://github.com/daichunghy/patchgate)).
 
-**Status:** `0.1.0-alpha.3` on npm (alpha). Not in the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility claim.
+**Status:** `0.1.0-alpha.4` on GitHub main (npm alpha publication requires OTP). Not in the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility claim.
 
 ```sh
 npx contribkit preflight --repo . --base HEAD

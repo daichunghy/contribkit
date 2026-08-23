@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.4
+
+- Exact test argv allowlist; bounded test output and sanitized execution environment.
+- Executed-versus-reported test provenance; MCP claims no longer satisfy a test gate by themselves.
+- Hook chooses a trusted base ref instead of evaluating only `HEAD`; explicit ref reads fail closed.
+- MCP frame-size limits and a version-derived publish script.
+
 ## 0.1.0-alpha.3
 
 - `npx contribkit` actually runs. The bin used to no-op when argv1 was the `contribkit` shim instead of `cli.js`.
