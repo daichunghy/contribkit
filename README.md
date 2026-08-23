@@ -16,6 +16,10 @@ This is **not** contributor-image generation ([LizardByte/contribkit](https://gi
 before publication. Not in the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility
 claim.
 
+> If one preflight run saved you a rejected pull request,
+> [star it](https://github.com/daichunghy/contribkit/stargazers). That is the
+> only growth signal this repo tracks.
+
 ```sh
 git clone --branch v0.1.0-alpha.7 https://github.com/daichunghy/contribkit.git
 cd contribkit
@@ -71,6 +75,18 @@ Claude Code plugin (local marketplace, not the Anthropic catalog):
 - A `v0.1.0` stable claim — this tag is alpha
 
 It does **not** decide whether code is correct, written by AI, or merge-worthy.
+
+## Who this is for
+
+- Contributors, and the coding agents acting for them, who want the repository
+  contract satisfied before a pull request is opened.
+- Maintainers tired of repeating "read CONTRIBUTING" on first contributions.
+- Not a fit if you want a GitHub merge gate — that is
+  [PatchGate](https://github.com/daichunghy/patchgate)'s lane — or contributor
+  images.
+
+If one preflight run saved you a rejected pull request, star the repository. It
+helps other contributors find the check.
 
 ## Security
 
