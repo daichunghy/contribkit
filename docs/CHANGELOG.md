@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.5
+
+- Synchronize runtime CLI, package metadata, Claude plugin metadata, and GitHub release identity.
+- Keep the GitHub source path explicit while npm alpha publication waits for OTP verification.
+
 ## 0.1.0-alpha.4
 
 - Exact test argv allowlist; bounded test output and sanitized execution environment.

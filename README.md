@@ -11,10 +11,14 @@ contribkit is a **contribution preflight** for coding agents and humans. It comp
 
 This is **not** contributor-image generation ([LizardByte/contribkit](https://github.com/LizardByte/contribkit)), not a contribution-proposal bot ([vidiyala99/contribkit](https://github.com/vidiyala99/contribkit)), and not a GitHub merge gate ([PatchGate](https://github.com/daichunghy/patchgate)).
 
-**Status:** `0.1.0-alpha.4` on GitHub main (npm alpha publication requires OTP). Not in the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility claim.
+**Status:** `0.1.0-alpha.5` on GitHub main. npm currently serves alpha.3; alpha5 publication requires OTP. Not in the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility claim.
 
 ```sh
-npx contribkit preflight --repo . --base HEAD
+git clone --branch v0.1.0-alpha.5 https://github.com/daichunghy/contribkit.git
+cd contribkit
+npm ci
+npm run verify
+node dist/src/cli.js preflight --repo . --base HEAD
 ```
 
 A clean clone against `HEAD` should print `contribkit pass`. There is no pull request yet, so missing `npm test` records and empty PR checkboxes are not blockers.
