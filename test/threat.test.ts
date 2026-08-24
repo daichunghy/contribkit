@@ -46,6 +46,13 @@ describe("threat model", () => {
     expect(allowlistedArgv("echo $(whoami)")).toBeUndefined();
     expect(allowlistedArgv("npm test")).toEqual(["npm", "test"]);
     expect(allowlistedArgv("python -m pytest")).toEqual(["python", "-m", "pytest"]);
+    expect(allowlistedArgv("rspec")).toEqual(["rspec"]);
+    expect(allowlistedArgv("phpunit")).toEqual(["phpunit"]);
+    expect(allowlistedArgv("rspec --format documentation")).toBeUndefined();
+    expect(allowlistedArgv("phpunit --filter FixtureTest")).toBeUndefined();
+    expect(allowlistedArgv("rspec | sh")).toBeUndefined();
+    expect(allowlistedArgv("phpunit && rm -rf /tmp/fixture")).toBeUndefined();
+    expect(allowlistedArgv("rspec $(touch /tmp/fixture)")).toBeUndefined();
   });
 
   it("T2: unknown contribkit.yml keys are needs-human and never execute", async () => {

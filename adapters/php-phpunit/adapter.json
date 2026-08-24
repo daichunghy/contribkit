@@ -1,0 +1,6 @@
+{
+  "id": "php-phpunit",
+  "match": { "filesAny": ["phpunit.xml"] },
+  "testCommand": "phpunit",
+  "maxDiffLines": null
+}

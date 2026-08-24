@@ -1,0 +1,6 @@
+{
+  "id": "ruby-rspec",
+  "match": { "filesAny": ["Gemfile"] },
+  "testCommand": "rspec",
+  "maxDiffLines": null
+}
