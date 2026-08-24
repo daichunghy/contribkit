@@ -56,6 +56,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "first-use": "npm run build && node dist/src/cli.js preflight --repo . --base HEAD --run-tests",
     "prepack": "npm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
