@@ -13,8 +13,7 @@ GitHub tag:
 git clone --branch v0.1.0-alpha.7 https://github.com/daichunghy/contribkit.git
 cd contribkit
 npm ci
-npm run build
-node dist/src/cli.js preflight --repo . --base HEAD
+npm run first-use
 ```
 
 Then run it against a real local repository before opening a pull request:
