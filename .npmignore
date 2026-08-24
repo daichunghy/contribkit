@@ -1,0 +1,6 @@
+# Development-only inputs and generated source maps are not release artifacts.
+fixtures/
+test/
+src/
+**/tests/
+**/*.map
