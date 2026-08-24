@@ -2,7 +2,7 @@
   "name": "contribkit",
   "version": "0.1.0-alpha.7",
   "private": false,
-  "description": "Deterministic contribution preflight for coding agents — do not open the PR until the repo contract is satisfied.",
+  "description": "Checks a repository's contribution rules before an agent or human opens a pull request.",
   "author": {
     "name": "daichunghy",
     "url": "https://github.com/daichunghy"
