@@ -1,0 +1,4 @@
+{
+  "name": "bun-package-manager-fixture",
+  "packageManager": "bun@1.2.3"
+}

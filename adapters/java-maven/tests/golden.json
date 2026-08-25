@@ -1,0 +1,6 @@
+{
+  "id": "java-maven",
+  "expectRuleId": "adapter-java-maven",
+  "expectCommand": "mvn test",
+  "expectSeverity": "advisory"
+}

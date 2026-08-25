@@ -1,0 +1,6 @@
+{
+  "id": "elixir-mix",
+  "match": { "filesAny": ["mix.exs"] },
+  "testCommand": "mix test",
+  "maxDiffLines": null
+}

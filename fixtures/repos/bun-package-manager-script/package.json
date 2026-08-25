@@ -1,0 +1,7 @@
+{
+  "name": "bun-package-manager-script-fixture",
+  "packageManager": "bun@1.2.3",
+  "scripts": {
+    "test": "bun test"
+  }
+}

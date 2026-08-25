@@ -1,0 +1,6 @@
+{
+  "id": "bun-test",
+  "expectRuleId": "adapter-bun-test",
+  "expectCommand": "bun test",
+  "expectSeverity": "advisory"
+}

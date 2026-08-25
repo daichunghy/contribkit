@@ -1,0 +1,6 @@
+{
+  "id": "deno-test",
+  "expectRuleId": "adapter-deno-test",
+  "expectCommand": "deno test",
+  "expectSeverity": "advisory"
+}

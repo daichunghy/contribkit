@@ -1,0 +1,6 @@
+{
+  "name": "bun-lockb-package-script-fixture",
+  "scripts": {
+    "test": "bun test"
+  }
+}

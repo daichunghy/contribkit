@@ -1,0 +1,6 @@
+{
+  "name": "bun-script-without-marker-fixture",
+  "scripts": {
+    "test": "bun test"
+  }
+}

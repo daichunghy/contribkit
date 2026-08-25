@@ -1,0 +1,6 @@
+{
+  "id": "elixir-mix",
+  "expectRuleId": "adapter-elixir-mix",
+  "expectCommand": "mix test",
+  "expectSeverity": "advisory"
+}

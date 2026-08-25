@@ -1,0 +1,6 @@
+{
+  // JSONC is a supported Deno project marker.
+  "tasks": {
+    "test": "deno test"
+  }
+}

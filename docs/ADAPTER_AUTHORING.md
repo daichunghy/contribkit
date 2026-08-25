@@ -38,5 +38,9 @@ PR description must state whether the adapter is advisory or listed in `blockAda
 is advisory so a new ecosystem adapter cannot silently block a contribution. Keep the command
 recorded in the receipt and let the maintainer decide whether it belongs in a blocking policy.
 
-The current bundled set is `python-pytest`, `node-npm-test`, and `go-test`. New adapters should have
-a real repository shape to match and should not be added only to increase the adapter count.
+The current bundled set is `python-pytest`, `node-npm-test`, `go-test`, `bun-test`, `deno-test`,
+`elixir-mix`, and `java-maven`. New adapters should have a real repository shape to match and
+should not be added only to increase the adapter count. A manifest may use `packageManager: bun`
+for a `package.json` marker; a `packageManager` condition is not applied to lockfile matches.
+An adapter may use `excludeFilesAny` when a stronger repository marker must take priority over a
+generic file match.
