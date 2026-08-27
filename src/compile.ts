@@ -30,7 +30,7 @@ const SIZE_FILES = /\b(?:under|at most|max(?:imum)?|no more than)\s+(\d+)\s+file
 const SIZE_LINES = /\b(?:under|at most|max(?:imum)?|no more than)\s+(\d+)\s+(?:diff\s+)?lines?\b/i;
 const TEST_COMMAND_LINE = /(?:^|\n)\s*test(?:s)?\s*[:=]\s*(.+)/i;
 const ALLOWED_TEST_MENTION =
-  /\b(npm test|npm run test|pnpm test|yarn test|pytest|python -m pytest|cargo test|go test|bun test|deno test|mix test|mvn test)\b/i;
+  /\b(npm test|npm run test|pnpm test|yarn test|pytest|python -m pytest|cargo test|go test|bun test|deno test|swift test|mix test|mvn test)\b/i;
 const AI_REQUIRE =
   /(?:\b(ai|llm|claude|codex)\b.{0,80}\b(disclos|must mention|required|declare)\b|\b(disclos|must mention|declare).{0,80}\b(ai|llm|claude|codex)\b)/i;
 const DCO_REQUIRE = /(?:require[sd]?|must).{0,40}signed-off-by|signed-off-by.{0,40}(?:required|must)/i;
@@ -364,6 +364,7 @@ export async function compile(options: CompileOptions): Promise<ContributionCont
             mentionsGo: /\bgo test\b/i.test(contribText) || goHint !== undefined,
             mentionsBun: /\bbun test\b/i.test(contribText),
             mentionsDeno: /\bdeno test\b/i.test(contribText),
+            mentionsSwift: /\bswift test\b/i.test(contribText),
             mentionsMix: /\bmix test\b/i.test(contribText),
             mentionsMaven: /\bmvn test\b/i.test(contribText),
           });
@@ -409,7 +410,7 @@ export async function compile(options: CompileOptions): Promise<ContributionCont
           origin: contributing?.path ?? "tests",
           check: "command_recorded",
           message:
-            "Tests are mentioned but no allowlisted command could be inferred. Record npm test / pytest / cargo test / go test / bun test / deno test / mix test / mvn test with exit 0.",
+            "Tests are mentioned but no allowlisted command could be inferred. Record npm test / pytest / cargo test / go test / bun test / deno test / swift test / mix test / mvn test with exit 0.",
         }),
       );
     }

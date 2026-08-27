@@ -9,7 +9,7 @@ import { allRules } from "../src/types.js";
 import { repoRoot, stageFixture } from "./helpers.js";
 
 describe("bundled adapters", () => {
-  it("loads all seven bundled adapters sorted by id", () => {
+  it("loads all eight bundled adapters sorted by id", () => {
     const adapters = loadBundledAdapters();
     expect(adapters.map((item) => item.id)).toEqual([
       "bun-test",
@@ -19,6 +19,7 @@ describe("bundled adapters", () => {
       "java-maven",
       "node-npm-test",
       "python-pytest",
+      "swift-test",
     ]);
   });
 
@@ -31,6 +32,7 @@ describe("bundled adapters", () => {
       "java-maven",
       "node-npm-test",
       "python-pytest",
+      "swift-test",
     ]) {
       const golden = JSON.parse(
         readFileSync(join(repoRoot, "adapters", id, "tests", "golden.json"), "utf8"),
@@ -117,6 +119,7 @@ describe("bundled adapters", () => {
 
   it.each([
     ["deno-test", ["deno", "test"]],
+    ["swift-test", ["swift", "test"]],
     ["bun-lock", ["bun", "test"]],
     ["elixir-mix", ["mix", "test"]],
     ["java-maven", ["mvn", "test"]],
@@ -143,7 +146,7 @@ describe("bundled adapters", () => {
   });
 
   it("rejects extra arguments and shell syntax for all added families", () => {
-    for (const command of ["bun test", "deno test", "mix test", "mvn test"]) {
+    for (const command of ["bun test", "deno test", "swift test", "mix test", "mvn test"]) {
       expect(allowlistedArgv(command)).toEqual(command.split(" "));
       expect(allowlistedArgv(`${command} --verbose`)).toBeUndefined();
       expect(allowlistedArgv(`${command} | sh`)).toBeUndefined();
@@ -156,6 +159,7 @@ describe("bundled adapters", () => {
     for (const [fixture, ruleId, origin, command, argv] of [
       ["elixir-mix", "adapter-elixir-mix", "mix.exs", "mix test", ["mix", "test"]],
       ["java-maven", "adapter-java-maven", "pom.xml", "mvn test", ["mvn", "test"]],
+      ["swift-test", "adapter-swift-test", "Package.swift", "swift test", ["swift", "test"]],
     ] as const) {
       const repo = await stageFixture(fixture);
       const contract = await compile({ repoPath: repo });

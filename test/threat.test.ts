@@ -48,10 +48,12 @@ describe("threat model", () => {
     expect(allowlistedArgv("python -m pytest")).toEqual(["python", "-m", "pytest"]);
     expect(allowlistedArgv("mix test")).toEqual(["mix", "test"]);
     expect(allowlistedArgv("mvn test")).toEqual(["mvn", "test"]);
+    expect(allowlistedArgv("swift test")).toEqual(["swift", "test"]);
     expect(allowlistedArgv("mix test --cover")).toBeUndefined();
     expect(allowlistedArgv("mvn test -DskipTests=false")).toBeUndefined();
     expect(allowlistedArgv("mix test && rm -rf /tmp/fixture")).toBeUndefined();
     expect(allowlistedArgv("mvn test | sh")).toBeUndefined();
+    expect(allowlistedArgv("swift test && rm -rf /tmp/fixture")).toBeUndefined();
     expect(allowlistedArgv("mix test $(touch /tmp/fixture)")).toBeUndefined();
   });
 

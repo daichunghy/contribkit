@@ -15,6 +15,7 @@ export const TEST_ARGV_FAMILIES: readonly (readonly string[])[] = [
   ["go", "test"],
   ["bun", "test"],
   ["deno", "test"],
+  ["swift", "test"],
   ["mix", "test"],
   ["mvn", "test"],
 ];
@@ -105,6 +106,7 @@ export function inferTestCommand(hints: {
   mentionsGo?: boolean;
   mentionsBun?: boolean;
   mentionsDeno?: boolean;
+  mentionsSwift?: boolean;
   mentionsMix?: boolean;
   mentionsMaven?: boolean;
 }): string | undefined {
@@ -122,6 +124,7 @@ export function inferTestCommand(hints: {
   if (hints.mentionsGo) return "go test";
   if (hints.mentionsBun) return "bun test";
   if (hints.mentionsDeno) return "deno test";
+  if (hints.mentionsSwift) return "swift test";
   if (hints.mentionsMix) return "mix test";
   if (hints.mentionsMaven) return "mvn test";
   return undefined;
