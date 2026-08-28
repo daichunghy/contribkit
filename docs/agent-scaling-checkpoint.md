@@ -24,8 +24,8 @@ CK-08 package surface: pass
 ```
 
 The complete repository verification also passed: 69 tests, 11 bundled
-adapters, TypeScript typecheck/build, package surface validation, offline
-clean-room consumer smoke and the
+adapters, TypeScript typecheck/build, package surface validation, clean-room
+consumer smoke and the
 agent-contract gate. The first-use helper preserves and explains a blocked
 receipt, and the Rust/Cargo adapter remains advisory unless explicitly
 blocked by policy.

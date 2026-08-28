@@ -7,9 +7,9 @@ publish, a stable release, a plugin-catalog listing, or a Claude-for-OSS claim.
 
 1. Freeze the intended source commit and version.
 2. From a clean checkout, run `npm ci`, `npm run verify`, and
-   `npm pack --dry-run --json`. The verify command includes the offline
-   clean-room consumer smoke: pack, install in a fresh directory, import the
-   package, and start the packaged CLI.
+   `npm pack --dry-run --json`. The verify command includes a clean-room
+   consumer smoke: pack, install in a fresh directory with lifecycle scripts
+   disabled, import the package, and start the packaged CLI.
 3. Inspect the tarball file list, adapter manifests, hooks, and package
    metadata. Confirm that no credentials, target-repository files, or local
    fixtures outside the intended package are included.

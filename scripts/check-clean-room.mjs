@@ -14,7 +14,7 @@ function run(file, args, cwd) {
     cwd,
     encoding: "utf8",
     stdio: "pipe",
-    env: { ...process.env, npm_config_offline: "true", npm_config_ignore_scripts: "true" },
+    env: { ...process.env, npm_config_prefer_offline: "true", npm_config_ignore_scripts: "true" },
   });
 }
 
@@ -55,7 +55,7 @@ async function main() {
     run("npm", ["init", "-y", "--silent"], consumer);
     run(
       "npm",
-      ["install", "--offline", "--ignore-scripts", "--no-package-lock", "--no-save", tarball],
+      ["install", "--ignore-scripts", "--no-package-lock", "--no-save", tarball],
       consumer,
     );
 

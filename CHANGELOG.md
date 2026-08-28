@@ -11,8 +11,8 @@ All notable changes are documented here, newest first. Entries mirror the tagged
   explicit opt-in execution tests.
 - Added the advisory CMake/CTest adapter with a static CMake manifest check,
   exact allowlisted `ctest` execution, and positive/negative fixtures.
-- Added an offline clean-room consumer smoke that packs, installs, imports, and
-  starts the published package surface without contacting the registry.
+- Added a clean-room consumer smoke that packs, installs, imports, and starts
+  the published package surface with lifecycle scripts disabled.
 - Added the missing product and architecture contracts plus release/update/
   rollback guidance. This entry is not a published version.
 
