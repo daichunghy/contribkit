@@ -55,7 +55,7 @@ async function main() {
     run("npm", ["init", "-y", "--silent"], consumer);
     run(
       "npm",
-      ["install", "--ignore-scripts", "--no-package-lock", "--no-save", tarball],
+      ["install", "--bin-links", "--ignore-scripts", "--no-package-lock", "--no-save", tarball],
       consumer,
     );
 
