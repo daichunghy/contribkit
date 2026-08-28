@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "evidenceBoundary": "local workflow evidence only",
+  "tasks": [
+    { "id": "CK-01", "title": "Contract and schema", "paths": ["src/types.ts", "src/schema.ts", "schemas", "test/schema.test.ts"], "commands": ["npm run typecheck", "npm run test"], "owner": "contract", "risk": "high", "humanReview": true },
+    { "id": "CK-02", "title": "Deterministic compile/evaluate", "paths": ["src/compile.ts", "src/evaluate.ts", "src/canonical.ts", "test/canonical.test.ts", "test/evaluate.test.ts"], "commands": ["npm run test", "npm run typecheck"], "owner": "compiler", "risk": "high", "humanReview": true },
+    { "id": "CK-03", "title": "Target root safety", "paths": ["src/repo.ts", "src/preflight.ts", "test/skeleton.test.ts", "test/fixtures.test.ts"], "commands": ["npm run test", "npm run first-use"], "owner": "preflight", "risk": "high", "humanReview": true },
+    { "id": "CK-04", "title": "Allowlist execution", "paths": ["src/allowlist.ts", "src/adapters.ts", "test/adapters.test.ts", "test/threat.test.ts"], "commands": ["npm run test", "npm run typecheck"], "owner": "security", "risk": "critical", "humanReview": true },
+    { "id": "CK-05", "title": "Hook interception", "paths": ["src/hook.ts", "hooks/hooks.json", "test/hooks.test.ts", "test/threat.test.ts"], "commands": ["npm run test", "npm run typecheck"], "owner": "security", "risk": "critical", "humanReview": true },
+    { "id": "CK-06", "title": "Receipt truthfulness", "paths": ["src/evaluate.ts", "src/explain.ts", "test/evaluate.test.ts", "test/fixtures.test.ts"], "commands": ["npm run test", "npm run typecheck"], "owner": "receipt", "risk": "high", "humanReview": true },
+    { "id": "CK-07", "title": "First-use CLI", "paths": ["src/cli.ts", "src/preflight.ts", "docs/first-use.md"], "commands": ["npm run first-use", "npm run build"], "owner": "onboarding", "risk": "medium", "humanReview": true },
+    { "id": "CK-08", "title": "Package surface", "paths": ["package.json", "scripts/check-package-surface.mjs", "README.md", "docs"], "commands": ["npm run build", "npm run check:package", "npm run verify"], "owner": "release", "risk": "high", "humanReview": true }
+  ]
+}

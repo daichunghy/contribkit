@@ -1,9 +1,10 @@
 import { execFile as execFileCallback } from "node:child_process";
 import { existsSync } from "node:fs";
-import { readFile, realpath, stat } from "node:fs/promises";
+import { readFile, readdir, realpath, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { compareTextUnit } from "./canonical.js";
+import { matchRepoPath } from "./glob.js";
 import type { EvaluationSnapshot, PathDiff, RecordedCommand } from "./types.js";
 
 const execFile = promisify(execFileCallback);
@@ -120,12 +121,57 @@ export async function readAtRef(
   }
 }
 
+async function workingTreeFiles(repoPath: string): Promise<string[]> {
+  const files: string[] = [];
+  async function visit(relative: string): Promise<void> {
+    const absolute = join(repoPath, relative);
+    let entries;
+    try {
+      entries = await readdir(absolute, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (entry.name === ".git") continue;
+      const child = relative.length > 0 ? `${relative}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        await visit(child);
+      } else if (entry.isFile()) {
+        files.push(child);
+      }
+    }
+  }
+  await visit("");
+  files.sort(compareTextUnit);
+  return files;
+}
+
+async function repositoryFiles(repoPath: string, ref: string): Promise<string[]> {
+  if (!(await isGitRepo(repoPath))) return await workingTreeFiles(repoPath);
+  const listed = await git(repoPath, ["ls-tree", "-r", "-z", "--name-only", ref]);
+  if (listed.code !== 0) return [];
+  return listed.stdout
+    .split("\0")
+    .filter((path) => path.length > 0)
+    .sort(compareTextUnit);
+}
+
 export async function firstExisting(
   repoPath: string,
   ref: string,
   candidates: readonly string[],
 ): Promise<{ path: string; text: string } | undefined> {
+  let files: string[] | undefined;
   for (const path of candidates) {
+    if (/[?*]/.test(path)) {
+      files ??= await repositoryFiles(repoPath, ref);
+      for (const matched of files) {
+        if (!matchRepoPath(path, matched)) continue;
+        const text = await readAtRef(repoPath, ref, matched);
+        if (text !== undefined) return { path: matched, text };
+      }
+      continue;
+    }
     const text = await readAtRef(repoPath, ref, path);
     if (text !== undefined) return { path, text };
   }

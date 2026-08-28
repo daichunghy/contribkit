@@ -13,8 +13,11 @@ export const TEST_ARGV_FAMILIES: readonly (readonly string[])[] = [
   ["python", "-m", "pytest"],
   ["cargo", "test"],
   ["go", "test"],
+  ["dotnet", "test"],
+  ["ctest"],
   ["bun", "test"],
   ["deno", "test"],
+  ["swift", "test"],
   ["mix", "test"],
   ["mvn", "test"],
 ];
@@ -103,8 +106,11 @@ export function inferTestCommand(hints: {
   mentionsPytest?: boolean;
   mentionsCargo?: boolean;
   mentionsGo?: boolean;
+  mentionsDotnet?: boolean;
+  mentionsCtest?: boolean;
   mentionsBun?: boolean;
   mentionsDeno?: boolean;
+  mentionsSwift?: boolean;
   mentionsMix?: boolean;
   mentionsMaven?: boolean;
 }): string | undefined {
@@ -120,8 +126,11 @@ export function inferTestCommand(hints: {
   if (hints.mentionsPytest) return "pytest";
   if (hints.mentionsCargo) return "cargo test";
   if (hints.mentionsGo) return "go test";
+  if (hints.mentionsDotnet) return "dotnet test";
+  if (hints.mentionsCtest) return "ctest";
   if (hints.mentionsBun) return "bun test";
   if (hints.mentionsDeno) return "deno test";
+  if (hints.mentionsSwift) return "swift test";
   if (hints.mentionsMix) return "mix test";
   if (hints.mentionsMaven) return "mvn test";
   return undefined;

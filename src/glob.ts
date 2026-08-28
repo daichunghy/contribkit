@@ -49,6 +49,18 @@ export function matchGlob(pattern: string, filePath: string): boolean {
   return globToRegExp(pat).test(file);
 }
 
+/** Adapter file patterns without `/` match a basename at any repository depth. */
+export function matchRepoPath(pattern: string, filePath: string): boolean {
+  const file = posix(filePath);
+  let pat = pattern.replace(/\\/g, "/");
+  if (pat.startsWith("/")) pat = pat.slice(1);
+  if (!pat.includes("/")) {
+    const base = file.split("/").pop() ?? file;
+    return globToRegExp(pat).test(base);
+  }
+  return globToRegExp(pat).test(file);
+}
+
 /**
  * GitHub CODEOWNERS subset: leading `/` anchors at repo root; a pattern
  * without `/` matches in any directory; trailing `/` is a directory prefix.

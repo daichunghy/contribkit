@@ -1,0 +1,6 @@
+{
+  "id": "rust-cargo",
+  "expectRuleId": "adapter-rust-cargo",
+  "expectCommand": "cargo test",
+  "expectSeverity": "advisory"
+}
