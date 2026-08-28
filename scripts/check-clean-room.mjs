@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { execFileSync } from "node:child_process";
-import { mkdtemp, mkdir, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -59,10 +59,13 @@ async function main() {
       consumer,
     );
 
-    const binary = join(consumer, "node_modules", ".bin", "contribkit");
-    const version = run(binary, ["--version"], consumer).trim();
+    const packageRoot = join(consumer, "node_modules", "contribkit");
+    const packageJson = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8"));
+    if (packageJson.bin?.contribkit !== "dist/src/cli.js") fail("packed package bin mapping is missing or changed");
+    const binary = join(packageRoot, "dist", "src", "cli.js");
+    const version = run(process.execPath, [binary, "--version"], consumer).trim();
     if (!/^0\.1\.0-alpha\.\d+$/.test(version)) fail(`installed binary returned unexpected version: ${version}`);
-    const help = run(binary, ["--help"], consumer);
+    const help = run(process.execPath, [binary, "--help"], consumer);
     if (!help.includes("Contribution preflight")) fail("installed binary did not load the packaged CLI");
     run(
       process.execPath,
