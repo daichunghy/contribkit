@@ -49,6 +49,7 @@ function packPackage(directory) {
 async function main() {
   const temporary = await mkdtemp(join(tmpdir(), "contribkit-clean-room-"));
   try {
+    run("npm", ["run", "build"], root);
     const tarball = packPackage(temporary);
     const consumer = join(temporary, "consumer");
     await mkdir(consumer);
