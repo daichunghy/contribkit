@@ -2,6 +2,20 @@
 
 All notable changes are documented here, newest first. Entries mirror the tagged releases (dates UTC); the release page for each tag carries the same text plus its assets.
 
+## [Unreleased]
+
+- Added a copy-paste first-use smoke helper and routed `npm run first-use` through
+  it so a blocked receipt is kept and explained with the next action.
+- Added the advisory Rust/Cargo and .NET adapters with exact allowlisted
+  `cargo test` and `dotnet test` commands, positive/negative fixtures, and
+  explicit opt-in execution tests.
+- Added the advisory CMake/CTest adapter with a static CMake manifest check,
+  exact allowlisted `ctest` execution, and positive/negative fixtures.
+- Added an offline clean-room consumer smoke that packs, installs, imports, and
+  starts the published package surface without contacting the registry.
+- Added the missing product and architecture contracts plus release/update/
+  rollback guidance. This entry is not a published version.
+
 ## [v0.1.0-alpha.6](https://github.com/daichunghy/contribkit/releases/tag/v0.1.0-alpha.6) — 2026-08-23
 
 Current public alpha. Runtime CLI, package, test, Claude plugin, marketplace metadata, README, tag, and main all identify alpha6. The clean-clone verify path passes. npm registry still serves alpha3; alpha6 publication requires OTP verification.
@@ -44,4 +58,3 @@ Plugin (local marketplace):
 ## [v0.1.0-alpha.3](https://github.com/daichunghy/contribkit/releases/tag/v0.1.0-alpha.3) — 2026-08-23
 
 Current alpha package release. Adds the deterministic hook/provenance hardening, exact test argv allowlist, bounded test output, fail-closed ref reads, and MCP frame limits. npm latest is 0.1.0-alpha.3. This is not a stable v0.1 release or Claude community catalog listing.
-

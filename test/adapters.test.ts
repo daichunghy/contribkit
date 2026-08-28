@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { allowlistedArgv } from "../src/allowlist.js";
+import { allowlistedArgv, inferTestCommand } from "../src/allowlist.js";
 import { loadBundledAdapters } from "../src/adapters.js";
 import { compile } from "../src/compile.js";
 import { preflight } from "../src/preflight.js";
@@ -9,16 +9,19 @@ import { allRules } from "../src/types.js";
 import { repoRoot, stageFixture } from "./helpers.js";
 
 describe("bundled adapters", () => {
-  it("loads all eight bundled adapters sorted by id", () => {
+  it("loads all eleven bundled adapters sorted by id", () => {
     const adapters = loadBundledAdapters();
     expect(adapters.map((item) => item.id)).toEqual([
       "bun-test",
+      "cmake-ctest",
       "deno-test",
+      "dotnet-test",
       "elixir-mix",
       "go-test",
       "java-maven",
       "node-npm-test",
       "python-pytest",
+      "rust-cargo",
       "swift-test",
     ]);
   });
@@ -26,12 +29,15 @@ describe("bundled adapters", () => {
   it("matches golden.json command families", () => {
     for (const id of [
       "bun-test",
+      "cmake-ctest",
       "deno-test",
+      "dotnet-test",
       "elixir-mix",
       "go-test",
       "java-maven",
       "node-npm-test",
       "python-pytest",
+      "rust-cargo",
       "swift-test",
     ]) {
       const golden = JSON.parse(
@@ -118,6 +124,7 @@ describe("bundled adapters", () => {
   });
 
   it.each([
+    ["cmake-ctest", ["ctest"]],
     ["deno-test", ["deno", "test"]],
     ["swift-test", ["swift", "test"]],
     ["bun-lock", ["bun", "test"]],
@@ -146,7 +153,7 @@ describe("bundled adapters", () => {
   });
 
   it("rejects extra arguments and shell syntax for all added families", () => {
-    for (const command of ["bun test", "deno test", "swift test", "mix test", "mvn test"]) {
+    for (const command of ["ctest", "bun test", "deno test", "swift test", "mix test", "mvn test"]) {
       expect(allowlistedArgv(command)).toEqual(command.split(" "));
       expect(allowlistedArgv(`${command} --verbose`)).toBeUndefined();
       expect(allowlistedArgv(`${command} | sh`)).toBeUndefined();
@@ -177,5 +184,48 @@ describe("bundled adapters", () => {
     const contract = await compile({ repoPath: repo });
     expect(allRules(contract).some((item) => item.id === "adapter-elixir-mix")).toBe(false);
     expect(allRules(contract).some((item) => item.id === "adapter-java-maven")).toBe(false);
+  });
+
+  it("matches a real CMake/CTest manifest and keeps the exact executable advisory", async () => {
+    const adapter = loadBundledAdapters().find((item) => item.id === "cmake-ctest");
+    expect(adapter).toMatchObject({
+      id: "cmake-ctest",
+      match: { filesAny: ["CMakeLists.txt"] },
+      testCommand: "ctest",
+      maxDiffLines: null,
+    });
+
+    const repo = await stageFixture("cmake-ctest");
+    const contract = await compile({ repoPath: repo });
+    const rule = allRules(contract).find((item) => item.id === "adapter-cmake-ctest");
+    expect(rule).toMatchObject({
+      origin: "CMakeLists.txt",
+      check: "command_recorded",
+      command: "ctest",
+      severity: "advisory",
+    });
+    expect(allowlistedArgv("ctest")).toEqual(["ctest"]);
+    expect(allowlistedArgv("ctest --output-on-failure")).toBeUndefined();
+    expect(inferTestCommand({ mentionsCtest: true })).toBe("ctest");
+  });
+
+  it("runs CTest only after explicit opt-in and passes no shell arguments", async () => {
+    const repo = await stageFixture("cmake-ctest");
+    const executeCommand = vi.fn(async () => ({ exitCode: 0, stdout: "passed", stderr: "" }));
+
+    await preflight({ repoPath: repo, baseRef: "HEAD", executeCommand });
+    expect(executeCommand).not.toHaveBeenCalled();
+
+    await preflight({ repoPath: repo, baseRef: "HEAD", runTests: true, executeCommand });
+    expect(executeCommand).toHaveBeenCalledOnce();
+    expect(executeCommand).toHaveBeenCalledWith(["ctest"], repo);
+  });
+
+  it("rejects missing and invalid CMake manifests", async () => {
+    for (const name of ["no-cmake-manifest", "invalid-cmake-manifest"] as const) {
+      const repo = join(repoRoot, "fixtures", "repos", "cmake-ctest", name);
+      const contract = await compile({ repoPath: repo });
+      expect(allRules(contract).some((item) => item.id === "adapter-cmake-ctest")).toBe(false);
+    }
   });
 });
