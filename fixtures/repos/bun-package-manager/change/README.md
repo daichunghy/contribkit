@@ -1,0 +1,1 @@
+Bun packageManager adapter fixture.

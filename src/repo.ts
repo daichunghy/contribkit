@@ -269,6 +269,7 @@ export const CONTRACT_CANDIDATES = {
   lockNpm: ["package-lock.json"] as const,
   lockPnpm: ["pnpm-lock.yaml"] as const,
   lockYarn: ["yarn.lock"] as const,
+  lockBun: ["bun.lock", "bun.lockb"] as const,
   pytest: ["pytest.ini", "pyproject.toml"] as const,
   cargo: ["Cargo.toml"] as const,
   gomod: ["go.mod"] as const,

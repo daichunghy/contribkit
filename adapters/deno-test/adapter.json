@@ -1,0 +1,6 @@
+{
+  "id": "deno-test",
+  "match": { "filesAny": ["deno.json", "deno.jsonc"] },
+  "testCommand": "deno test",
+  "maxDiffLines": null
+}

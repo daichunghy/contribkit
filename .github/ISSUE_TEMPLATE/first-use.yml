@@ -1,0 +1,46 @@
+name: First-use feedback
+description: Report what happened when you ran contribkit on a real repository
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please omit private repository contents, credentials, and unredacted receipts.
+  - type: input
+    id: version
+    attributes:
+      label: contribkit version or commit
+      placeholder: v0.1.0-alpha.7 or full SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: First-use result
+      options:
+        - worked
+        - worked with workaround
+        - did not reach first result
+    validations:
+      required: true
+  - type: input
+    id: time-to-result
+    attributes:
+      label: Time to first result
+      placeholder: e.g. 8 minutes
+    validations:
+      required: true
+  - type: textarea
+    id: repository
+    attributes:
+      label: Repository shape
+      description: Language/tooling and the contribution files that mattered. Do not include private URLs.
+    validations:
+      required: true
+  - type: textarea
+    id: friction
+    attributes:
+      label: First friction or useful result
+      description: What happened, what you expected, and what should change.
+    validations:
+      required: true

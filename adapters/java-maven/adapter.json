@@ -1,0 +1,6 @@
+{
+  "id": "java-maven",
+  "match": { "filesAny": ["pom.xml"] },
+  "testCommand": "mvn test",
+  "maxDiffLines": null
+}

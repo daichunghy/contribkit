@@ -1,0 +1,1 @@
+Deno JSONC adapter fixture.
