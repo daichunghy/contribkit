@@ -27,7 +27,7 @@ body:
     id: test-family
     attributes:
       label: Allowlisted test command family
-      description: Must be a simple argv family (pytest, npm test, cargo test, go test, mix test, mvn test). No pipes.
+      description: Must be a simple exact argv family (pytest, npm test, cargo test, go test, phpunit, rspec, bun test, deno test, mix test, mvn test). No extra arguments or pipes.
       placeholder: pytest -q
     validations:
       required: true

