@@ -11,7 +11,7 @@ contribkit checks a repository's contribution rules before an agent or human ope
 
 This is **not** contributor-image generation ([LizardByte/contribkit](https://github.com/LizardByte/contribkit)), not a contribution-proposal bot ([vidiyala99/contribkit](https://github.com/vidiyala99/contribkit)), and not a GitHub merge gate ([PatchGate](https://github.com/daichunghy/patchgate)).
 
-**Live status (2026-08-24):** 0 GitHub stars, 0 forks, and no verified external consumer or
+**Live status (2026-08-30):** 0 GitHub stars, 0 forks, and no verified external consumer or
 pilot. `0.1.0-alpha.7` is on GitHub main. The npm `alpha` dist-tag currently resolves
 `0.1.0-alpha.6`; alpha.7 is prepared in source but still requires npm two-factor verification
 before publication. Not in the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility
