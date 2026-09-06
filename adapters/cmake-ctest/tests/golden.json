@@ -1,0 +1,6 @@
+{
+  "id": "cmake-ctest",
+  "expectRuleId": "adapter-cmake-ctest",
+  "expectCommand": "ctest",
+  "expectSeverity": "advisory"
+}

@@ -1,0 +1,6 @@
+{
+  "id": "dotnet-test",
+  "match": { "filesAny": ["*.sln", "*.csproj"] },
+  "testCommand": "dotnet test",
+  "maxDiffLines": null
+}

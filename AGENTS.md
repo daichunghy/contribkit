@@ -24,3 +24,4 @@ plugin catalog or Claude-for-OSS eligibility.
 - Prefer JSON `permissionDecision: deny` over rewriting tool argv.
 - `--repo` must be a git clone root. Do not walk up to a parent repository.
 - Locale-free sorts (code-unit comparator). `evaluatedAt` and `overridden` sit outside the digested receipt body.
+- Follow [docs/agent-verification-map.md](docs/agent-verification-map.md) and [docs/agent-evaluation-protocol.md](docs/agent-evaluation-protocol.md) for bounded agent work, acceptance commands and evidence labels.
