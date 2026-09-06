@@ -1,0 +1,6 @@
+{
+  "id": "php-phpunit",
+  "expectRuleId": "adapter-php-phpunit",
+  "expectCommand": "phpunit",
+  "expectSeverity": "advisory"
+}
