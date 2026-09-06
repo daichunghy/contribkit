@@ -1,0 +1,6 @@
+{
+  "id": "ruby-rspec",
+  "expectRuleId": "adapter-ruby-rspec",
+  "expectCommand": "rspec",
+  "expectSeverity": "advisory"
+}

@@ -70,7 +70,7 @@ describe("release candidate gate", () => {
     const result = run(repoRoot);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("release candidate check passed");
-    expect(result.stdout).toContain("11 adapters");
+    expect(result.stdout).toContain("13 adapters");
   });
 
   it("rejects a package that exposes a development-only path", async () => {
