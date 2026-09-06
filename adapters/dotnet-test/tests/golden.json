@@ -1,0 +1,6 @@
+{
+  "id": "dotnet-test",
+  "expectRuleId": "adapter-dotnet-test",
+  "expectCommand": "dotnet test",
+  "expectSeverity": "advisory"
+}

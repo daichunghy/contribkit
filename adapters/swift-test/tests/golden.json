@@ -1,0 +1,6 @@
+{
+  "id": "swift-test",
+  "expectRuleId": "adapter-swift-test",
+  "expectCommand": "swift test",
+  "expectSeverity": "advisory"
+}

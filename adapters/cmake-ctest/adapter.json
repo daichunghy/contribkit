@@ -1,0 +1,6 @@
+{
+  "id": "cmake-ctest",
+  "match": { "filesAny": ["CMakeLists.txt"] },
+  "testCommand": "ctest",
+  "maxDiffLines": null
+}
