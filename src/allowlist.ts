@@ -13,8 +13,6 @@ export const TEST_ARGV_FAMILIES: readonly (readonly string[])[] = [
   ["python", "-m", "pytest"],
   ["cargo", "test"],
   ["go", "test"],
-  ["phpunit"],
-  ["rspec"],
   ["dotnet", "test"],
   ["ctest"],
   ["bun", "test"],

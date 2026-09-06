@@ -11,7 +11,7 @@ contribkit checks a repository's contribution rules before an agent or human ope
 
 This is **not** contributor-image generation ([LizardByte/contribkit](https://github.com/LizardByte/contribkit)), not a contribution-proposal bot ([vidiyala99/contribkit](https://github.com/vidiyala99/contribkit)), and not a GitHub merge gate ([PatchGate](https://github.com/daichunghy/patchgate)).
 
-**Live status (2026-08-30):** 0 GitHub stars, 0 forks, and no verified external consumer or
+**Live status (2026-08-24):** 0 GitHub stars, 0 forks, and no verified external consumer or
 pilot. `0.1.0-alpha.7` is on GitHub main. The npm `alpha` dist-tag currently resolves
 `0.1.0-alpha.6`; alpha.7 is prepared in source but still requires npm two-factor verification
 before publication. Not in the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility
@@ -66,7 +66,7 @@ Claude Code plugin (local marketplace, not the Anthropic catalog):
 
 `--json` prints machine-readable contract or receipt JSON. Preflight exit codes: `blocked` → 1; `pass` and `needs-human` → 0. `--repo` must be a git clone root, not a nested folder of another repository.
 
-`--run-tests` is opt-in. It only executes exact allowlisted argv (`npm test`, `npm run test`, `pnpm test`, `yarn test`, `pytest`, `python -m pytest`, `cargo test`, `go test`, `dotnet test`, `ctest`, `phpunit`, `rspec`, `bun test`, `deno test`, `swift test`, `mix test`, `mvn test`). Extra arguments, pipes, `&&`, and `$()` are rejected. Default preflight only *records* commands already supplied; it does not run the target repository.
+`--run-tests` is opt-in. It only executes exact allowlisted argv (`npm test`, `npm run test`, `pnpm test`, `yarn test`, `pytest`, `python -m pytest`, `cargo test`, `go test`, `ctest`, `bun test`, `deno test`, `swift test`, `mix test`, `mvn test`). Extra arguments, pipes, `&&`, and `$()` are rejected. Default preflight only *records* commands already supplied; it does not run the target repository.
 
 `CONTRIBKIT_ALLOW=1` sets `receipt.overridden = true`. It does not rewrite tool argv.
 
@@ -78,7 +78,7 @@ Claude Code plugin (local marketplace, not the Anthropic catalog):
 - Golden fixtures under `fixtures/repos/`
 - Claude plugin: `.claude-plugin/plugin.json`, `skills/*`, `hooks/hooks.json` (Bash|PowerShell `gh`/`glab` **and** `mcp__.*__create_pull_request`)
 - MCP stdio: `node dist/src/cli.js mcp` tools `compile_contract`, `preflight_diff`, `explain_receipt`
-- Bundled adapters: `python-pytest`, `node-npm-test`, `go-test`, `php-phpunit`, `ruby-rspec`, `rust-cargo`, `dotnet-test`, `cmake-ctest`, `bun-test`, `deno-test`, `swift-test`, `elixir-mix`, `java-maven` (advisory `command_recorded` only unless `blockAdapters`)
+- Bundled adapters: `python-pytest`, `node-npm-test`, `go-test`, `rust-cargo`, `dotnet-test`, `cmake-ctest`, `bun-test`, `deno-test`, `swift-test`, `elixir-mix`, `java-maven` (advisory `command_recorded` only unless `blockAdapters`)
 - Adapter authoring guide: [docs/ADAPTER_AUTHORING.md](docs/ADAPTER_AUTHORING.md)
 
 ## What is not shipped
