@@ -1,0 +1,6 @@
+{
+  "id": "rust-cargo",
+  "match": { "filesAny": ["Cargo.toml"] },
+  "testCommand": "cargo test",
+  "maxDiffLines": null
+}

@@ -41,6 +41,16 @@ function adaptersDir(): string {
   return join(packageRoot(), "adapters");
 }
 
+function validCmakeCTestManifest(path: string, text: string): boolean {
+  if (path !== "CMakeLists.txt" && !path.endsWith("/CMakeLists.txt")) return false;
+  const source = text.replace(/#[^\r\n]*/g, "");
+  const hasMinimumVersion = /\bcmake_minimum_required\s*\(\s*VERSION\s+\d+(?:\.\d+){0,2}\b/i.test(source);
+  const hasCTestSetup =
+    /\binclude\s*\(\s*CTest\b/i.test(source) ||
+    /\benable_testing\s*\(/i.test(source);
+  return hasMinimumVersion && hasCTestSetup;
+}
+
 function parseManifest(raw: unknown, folder: string): AdapterManifest | undefined {
   if (!isRecord(raw) || typeof raw.id !== "string" || raw.id.trim().length === 0) return undefined;
   const match = raw.match;
@@ -135,6 +145,7 @@ export async function adapterRules(options: {
   for (const adapter of loadBundledAdapters()) {
     const hit = await matchingAdapterFile(options.repoPath, options.ref, adapter.match);
     if (hit === undefined) continue;
+    if (adapter.id === "cmake-ctest" && !validCmakeCTestManifest(hit.path, hit.text)) continue;
     const argv = allowlistedArgv(adapter.testCommand);
     if (argv === undefined) {
       rules.push({
