@@ -4,6 +4,20 @@ All notable changes are documented here, newest first. Entries mirror the tagged
 
 ## [Unreleased]
 
+- Reworked first-run UX into `doctor` (diagnostic) and `check` (preflight)
+  with automatic remote-tracking base selection; missing bases now fail
+  clearly rather than silently using HEAD and skipping committed work.
+- Added `--strict` for machine use (needs-human exits 3); made unknown flags,
+  missing values and conflicting PR-body options fail with explicit errors.
+- Added receipt body-digest verification to CLI and MCP `explain`; digest
+  detects tampering but does not authenticate authorship.
+- Hardened Claude PR hooks to inspect only PR-create operations, extracting
+  inline and body-file evidence without executing the command.
+- Added end-to-end first-use, hook and packed-package regression cases,
+  a contributor journey contract and updated onboarding documentation.
+  Not published in the npm alpha yet.
+
+
 - Fixed MCP stdio JSON-RPC framing to use newline-delimited messages, bounded
   input, correct notification behavior, and regression tests for split frames.
 - Compile contribution rules from the trusted diff base by default to prevent

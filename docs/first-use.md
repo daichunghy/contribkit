@@ -6,67 +6,67 @@ tests is a separate opt-in.
 
 ## 1. Choose the correct version
 
-The npm release \`0.1.0-alpha.7\` contains the earlier \`preflight\` command.
+The npm release `0.1.0-alpha.7` contains the earlier `preflight` command.
 Until another release is verified and published, use the current GitHub source
-for \`doctor\`, \`check\`, and \`--strict\`:
+for `doctor`, `check`, and `--strict`:
 
-\`\`\`sh
+```sh
 git clone https://github.com/daichunghy/contribkit.git
 cd contribkit
 npm ci
 npm run verify
-\`\`\`
+```
 
-The resulting \`dist/src/cli.js\` is the ContribKit executable.
+The resulting `dist/src/cli.js` is the ContribKit executable.
 
 ## 2. Go to the repository you actually want to contribute to
 
-\`\`\`sh
+```sh
 cd /path/to/your-project
 git fetch origin
 node /path/to/contribkit/dist/src/cli.js doctor
-\`\`\`
+```
 
-If your clone has \`origin/HEAD\`, \`origin/main\` or \`origin/master\`,
+If your clone has `origin/HEAD`, `origin/main` or `origin/master`,
 ContribKit selects that remote-tracking ref and reports changed-file and
 contract-rule counts. This is **setup readiness**, not approval.
 
 If the command reports no trusted base, choose the appropriate ref explicitly:
 
-\`\`\`sh
+```sh
 node /path/to/contribkit/dist/src/cli.js doctor --base origin/develop
-\`\`\`
+```
 
-Avoid \`--base HEAD\` on a feature branch: it omits changes already committed
-to that branch. Use \`HEAD\` only when you deliberately want to check
+Avoid `--base HEAD` on a feature branch: it omits changes already committed
+to that branch. Use `HEAD` only when you deliberately want to check
 uncommitted local work or demonstrate the clean-clone smoke.
 
 ## 3. Write a realistic PR body and check it
 
-Create \`/tmp/my-pr.md\` with the issue reference, change summary and
+Create `/tmp/my-pr.md` with the issue reference, change summary and
 checklist required by the target repository.
 
-\`\`\`sh
+```sh
 node /path/to/contribkit/dist/src/cli.js check --base origin/main \
   --body-file /tmp/my-pr.md --out /tmp/contribkit-receipt.json
-\`\`\`
+```
 
 Interpret the printed result:
 
-- \`pass\`: there are no unresolved mandatory or human-decision findings.
-- \`blocked\`: correct each listed blocker and rerun.
-- \`needs-human\`: consult the maintainer about the listed decision; no
+- `pass`: there are no unresolved mandatory or human-decision findings.
+- `blocked`: correct each listed blocker and rerun.
+- `needs-human`: consult the maintainer about the listed decision; no
   approval is implied.
-- \`advisory\`: nonblocking guidance that still deserves attention.
+- `advisory`: nonblocking guidance that still deserves attention.
 
-\`--out\` writes a receipt regardless of whether the status is blocked.
+`--out` writes a receipt regardless of whether the status is blocked.
 The human-readable next steps appear in the console. Keep receipts **outside
 the target Git working tree** so the report does not accidentally count itself
 as a new file.
 
-\`\`\`sh
+```sh
 node /path/to/contribkit/dist/src/cli.js explain /tmp/contribkit-receipt.json
-\`\`\`
+```
 
 The receipt body digest is checked when explaining it. This catches accidental
 changes to the receipt but is **not authentication**; a malicious writer can
@@ -74,37 +74,37 @@ recalculate an unkeyed digest.
 
 ## 4. Optional test evidence
 
-\`\`\`sh
+```sh
 node /path/to/contribkit/dist/src/cli.js check --base origin/main \
   --body-file /tmp/my-pr.md --run-tests
-\`\`\`
+```
 
 ContribKit only runs the exact allowlisted test argv indicated by the
 base-revision contract. It runs up to 16 distinct commands sequentially and
 records their exit status. It does **not** execute arbitrary target shell
-commands and does not run any tests without \`--run-tests\`.
+commands and does not run any tests without `--run-tests`.
 
 Even an allowed test runner can execute arbitrary code from your repository.
 Only use this option in a clone you are willing to execute.
 
 ## 5. Automation
 
-\`\`\`sh
+```sh
 node /path/to/contribkit/dist/src/cli.js check --base origin/main \
   --body-file /tmp/my-pr.md --strict --json --out /tmp/receipt.json
-\`\`\`
+```
 
 Exit codes are 0 for pass, 1 for blocked and 2 for invalid arguments or
 configuration. By default needs-human also exits 0, preserving historical
-compatibility; \`--strict\` makes needs-human exit 3 so it cannot be silently
+compatibility; `--strict` makes needs-human exit 3 so it cannot be silently
 mistaken for approval in CI. Machine-readable JSON stays on stdout.
 
 ## If you are a maintainer
 
-Add a \`contribkit.yml\` file on the **base branch** and commit it there.
+Add a `contribkit.yml` file on the **base branch** and commit it there.
 For example:
 
-\`\`\`yaml
+```yaml
 schema: contribkit.policy.v1
 requireIssue: true
 prCheckboxes: required
@@ -112,7 +112,7 @@ maxFiles: 20
 maxDiffLines: 400
 blockAdapters:
   - rust-cargo
-\`\`\`
+```
 
 The bundled Rust adapter becomes blocking only when a Cargo project matches.
 Unrecognized adapter names are reported to a human instead of silently

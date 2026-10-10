@@ -48,6 +48,23 @@ that code is correct, safe, human-written, or merge-worthy.
 - Unknown or conflicting requirements remain visible as `needs-human` rather
   than becoming a guessed block.
 
+## First-use experience
+
+The primary interface is progressive: `doctor` checks that an appropriate
+review base exists; `check` runs a non-executing preflight and explains
+findings; `preflight`, `compile`, `explain`, MCP and Claude hooks expose
+advanced surfaces without changing the same deterministic core.
+
+Without explicit `--base`, `check` first tries cached origin/HEAD,
+origin/main, then origin/master, and errors if no remote-tracking ref exists.
+Neither a clean working tree nor an unresolved human review may be described
+as proof of PR readiness. CI users can opt into `--strict` (needs-human exits
+3); the legacy default remains 0 for needs-human for compatibility.
+
+An explain step verifies the receipt's digested body, but SHA-256 does not
+authenticate a receipt. Hook events unrelated to PR creation do not trigger
+preflight. No code from a target repository is run without `--run-tests`.
+
 ## v0.1 scope
 
 The first release covers contribution guidance extraction, issue linkage,

@@ -1,20 +1,20 @@
 ---
 name: explain
-description: Turn a contribkit preflight receipt into human-readable blockers and remediation.
+description: Explain a ContribKit receipt and its next required actions.
 ---
 
-# contribkit explain
+# ContribKit explain
 
-Read a receipt JSON file and print the blockers. Do not rewrite `gh`/`glab` argv.
+Save a preflight receipt outside the Git working tree, then explain it:
 
 ```sh
+node dist/src/cli.js check --repo . --base origin/main --out /tmp/receipt.json
 node dist/src/cli.js explain /tmp/receipt.json
 ```
 
-Write a receipt first:
+The explain command verifies that the receipt body matches its stored
+digest, but this hash is not an identity signature. Never turn an override or
+a `needs-human` result into a fabricated `pass`.
 
-```sh
-node dist/src/cli.js preflight --repo . --base HEAD --out /tmp/receipt.json
-```
-
-If `overridden` is true, still print the blockers. An override is an explicit user choice (`CONTRIBKIT_ALLOW=1`), not a passing receipt.
+To fail CI when human review is outstanding, use `--strict` on the check
+command. This exits 3 for `needs-human`.

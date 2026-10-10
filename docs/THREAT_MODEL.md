@@ -34,6 +34,11 @@
 | T15 | A target test ignores SIGTERM and keeps running indefinitely | Bound execution time, escalate to SIGKILL and mark timeout with nonzero exit code 124. |
 | T16 | MCP clients cannot connect due to HTTP-style framing over stdio | Use newline-delimited JSON-RPC input and output with frame limits and no notification response. |
 
+| T17 | A first-time user silently compares against HEAD and misses committed changes | Use an explicit base or only discover a remote-tracking base; fail with a remediation when unavailable. |
+| T18 | A malformed or mistyped CLI flag is silently ignored | Validate per-command options, missing values and mutually exclusive PR body inputs. |
+| T19 | A tampered receipt is explained as passing | Verify digest against the current receipt body before explaining it; do not claim signature authenticity. |
+| T20 | Claude hook blocks ordinary Bash activity or misses available PR text | Inspect tool name and PR-creation argv without executing it; read explicit body files with size limits. |
+
 ## Non-claims
 
 We do not claim memory-safe parsing of every CODEOWNERS dialect, or that a `pass` receipt means the PR will be merged.

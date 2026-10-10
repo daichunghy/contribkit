@@ -20,84 +20,84 @@ pull request for you.
 ## Start in two steps
 
 **Important release distinction:** the published npm
-\`contribkit@0.1.0-alpha.7\` is an earlier alpha. The commands
-\`doctor\`, \`check\`, and \`--strict\` documented below are on the
+`contribkit@0.1.0-alpha.7` is an earlier alpha. The commands
+`doctor`, `check`, and `--strict` documented below are on the
 **current source branch** until a new npm release is verified and published.
 
 Build the current source checkout:
 
-\`\`\`sh
+```sh
 git clone https://github.com/daichunghy/contribkit.git
 cd contribkit
 npm ci
 npm run verify
-\`\`\`
+```
 
 Run against an **existing local Git clone**. Replace the placeholder path with
 the actual clone you want to contribute to:
 
-\`\`\`sh
+```sh
 node /path/to/contribkit/dist/src/cli.js doctor --repo /path/to/target
 node /path/to/contribkit/dist/src/cli.js check --repo /path/to/target \
   --body-file /path/to/pr-body.md
-\`\`\`
+```
 
 If you installed a future version that contains this CLI, use
-\`contribkit doctor\` and \`contribkit check\` directly. No policy file is
+`contribkit doctor` and `contribkit check` directly. No policy file is
 required to run the basic checks.
 
 ### Understanding the result
 
 | Result | Meaning | What to do |
 | --- | --- | --- |
-| \`pass\` | All **blocking** and human-decision checks passed | You may continue preparing your PR; code quality still needs review |
-| \`blocked\` | At least one mandatory condition failed | Fix the listed item, then rerun |
-| \`needs-human\` | An unresolved decision requires human attention | Ask a maintainer to review the indicated paths or policy |
-| \`advisory\` | A recommendation that does not block by itself | Consider the suggestion before submitting |
+| `pass` | All **blocking** and human-decision checks passed | You may continue preparing your PR; code quality still needs review |
+| `blocked` | At least one mandatory condition failed | Fix the listed item, then rerun |
+| `needs-human` | An unresolved decision requires human attention | Ask a maintainer to review the indicated paths or policy |
+| `advisory` | A recommendation that does not block by itself | Consider the suggestion before submitting |
 
-A clean tree relative to \`HEAD\` is **not** proof that your branch is ready.
+A clean tree relative to `HEAD` is **not** proof that your branch is ready.
 That command only checks uncommitted work. ContribKit therefore selects the
-local \`origin/HEAD\`, \`origin/main\` or \`origin/master\` remote-tracking
+local `origin/HEAD`, `origin/main` or `origin/master` remote-tracking
 baseline by default, and **fails with instructions** when none is available.
 You can select a different trusted baseline explicitly:
 
-\`\`\`sh
+```sh
 git fetch origin
 node /path/to/contribkit/dist/src/cli.js check --repo . --base origin/develop \
   --body "Fixes #123"
-\`\`\`
+```
 
 Remote-tracking refs are only as current as your latest fetch. The trust
-decision for \`--base\` belongs to you and your repository maintainer.
+decision for `--base` belongs to you and your repository maintainer.
 
 ## Three levels, one deterministic engine
 
 ### 1. Contributor (zero configuration)
 
-\`doctor\` explains whether this clone has a usable review baseline and shows
-the number of changed files and available checks. \`check\` runs the actual
-contribution preflight. A PR draft can be passed with \`--body\` or
-\`--body-file\`, which helps check issue links and checklist requirements.
+`doctor` explains whether this clone has a usable review baseline and shows
+the number of changed files and available checks. `check` runs the actual
+contribution preflight. A PR draft can be passed with `--body` or
+`--body-file`, which helps check issue links and checklist requirements.
 
 The command **does not run tests by default**. To explicitly execute every
 distinct allowlisted test command mentioned in the compiled contract:
 
-\`\`\`sh
+```sh
 contribkit check --base origin/main --body-file pr.md --run-tests
-\`\`\`
+```
 
-**Warning:** even an allowlisted \`npm test\` or \`cargo test\` runs code from
+**Warning:** even an allowlisted `npm test` or `cargo test` runs code from
 the target repository. Only opt in when you trust that code. The runner never
 evaluates arbitrary shell pipelines or target-defined command strings.
 
 ### 2. Maintainer (precise, versioned rules)
 
-ContribKit reads \`CONTRIBUTING.md\`,
-\`.github/PULL_REQUEST_TEMPLATE.md\`, \`.github/CODEOWNERS\` and optional
-\`contribkit.yml\`. Add an explicit policy **on your trusted base branch**
+ContribKit reads `CONTRIBUTING.md`,
+`.github/PULL_REQUEST_TEMPLATE.md`, `.github/CODEOWNERS` and optional
+`contribkit.yml`. Add an explicit policy **on your trusted base branch**
 before relying on it for new contributions:
 
-\`\`\`yaml
+```yaml
 schema: contribkit.policy.v1
 requireIssue: true
 maxFiles: 20
@@ -106,40 +106,40 @@ prCheckboxes: required
 license: required
 blockAdapters:
   - node-npm-test
-\`\`\`
+```
 
-An adapter is advisory by default; \`blockAdapters\` selects which ones become
-mandatory. Typos in adapter IDs are reported as \`needs-human\`. Contributors
-cannot weaken the rules for their own PR simply by changing \`contribkit.yml\`
+An adapter is advisory by default; `blockAdapters` selects which ones become
+mandatory. Typos in adapter IDs are reported as `needs-human`. Contributors
+cannot weaken the rules for their own PR simply by changing `contribkit.yml`
 or CODEOWNERS in the proposed branch: by default the rules come from the
 selected base revision.
 
-Use \`contribkit compile --repo . --ref origin/main --json\` to inspect the
+Use `contribkit compile --repo . --ref origin/main --json` to inspect the
 exact machine-readable contract. [Adapter guide](docs/ADAPTER_AUTHORING.md).
 
 ### 3. Automation and AI agents (explicit boundaries)
 
-\`\`\`sh
+```sh
 contribkit check --base origin/main --body-file pr.md --strict --json \
   --out receipt.json
 contribkit explain receipt.json
-\`\`\`
+```
 
-\`--strict\` treats \`needs-human\` as exit code **3** for automation.
+`--strict` treats `needs-human` as exit code **3** for automation.
 Default exit codes are 0 (pass or needs-human), 1 (blocked) and 2
 (command or configuration error); strict mode adds 3 (needs-human).
 JSON receipts retain an independently checkable digest of their body; the
 digest is not a signature or a proof of where the data came from.
 
 The optional Claude Code plugin intercepts recognized PR-creation tools
-(\`gh pr create\`, \`glab mr create\`, supported GitHub MCP calls); unrelated
+(`gh pr create`, `glab mr create`, supported GitHub MCP calls); unrelated
 shell commands are not subject to the PR preflight hook. The local MCP stdio
-server exposes \`compile_contract\`, \`preflight_diff\`, and
-\`explain_receipt\`, all without opening PRs.
+server exposes `compile_contract`, `preflight_diff`, and
+`explain_receipt`, all without opening PRs.
 
-\`\`\`sh
+```sh
 node dist/src/cli.js mcp
-\`\`\`
+```
 
 The MCP transport is newline-delimited JSON-RPC with a bounded input frame
 and the documented legacy initialize handshake. The hook and MCP integration
