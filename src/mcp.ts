@@ -4,6 +4,7 @@ import { compile } from "./compile.js";
 import { canonicalJson } from "./canonical.js";
 import { preflight } from "./preflight.js";
 import { assertReceipt } from "./schema.js";
+import { verifyReceiptDigest } from "./receipt.js";
 import { isRecord, type RecordedCommand } from "./types.js";
 import { VERSION } from "./version.js";
 
@@ -125,6 +126,7 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<un
     if (name === "explain_receipt") {
       if (!isRecord(args.receipt)) return textResult(toolError("INVALID_ARGS", "receipt is required"), true);
       assertReceipt(args.receipt);
+      verifyReceiptDigest(args.receipt);
       return textResult({ text: explainReceipt(args.receipt) });
     }
     return textResult(toolError("UNKNOWN_TOOL", `unknown tool: ${name}`), true);

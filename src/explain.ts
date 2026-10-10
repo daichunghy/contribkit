@@ -30,6 +30,8 @@ export function explainReceipt(receipt: PreflightReceipt): string {
   return formatReceipt(receipt);
 }
 
-export function statusExitCode(status: ReceiptStatus): number {
-  return status === "blocked" ? 1 : 0;
+export function statusExitCode(status: ReceiptStatus, strict = false): number {
+  if (status === "blocked") return 1;
+  if (strict && status === "needs-human") return 3;
+  return 0;
 }
