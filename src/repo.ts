@@ -1,6 +1,5 @@
 import { execFile as execFileCallback } from "node:child_process";
-import { existsSync } from "node:fs";
-import { readFile, readdir, realpath, stat } from "node:fs/promises";
+import { lstat, readFile, readdir, realpath } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { compareTextUnit } from "./canonical.js";
@@ -111,9 +110,9 @@ export async function readAtRef(
     return undefined;
   }
   const abs = join(repoPath, filePath);
-  if (!existsSync(abs)) return undefined;
   try {
-    const info = await stat(abs);
+    // A non-Git fixture must not dereference a symlink outside its root.
+    const info = await lstat(abs);
     if (!info.isFile()) return undefined;
     const buf = await readFile(abs);
     return buf.subarray(0, TEXT_CAP).toString("utf8");
@@ -270,11 +269,13 @@ export async function buildSnapshot(
     seen.add(path);
     let insertions = 0;
     try {
-      const buf = await readFile(join(abs, path));
-      if (buf.includes(0)) {
-        insertions = 0;
-      } else {
-        insertions = countLines(buf.subarray(0, TEXT_CAP).toString("utf8"));
+      const file = join(abs, path);
+      // Git tracks links as paths; do not read the link's target for stats.
+      if ((await lstat(file)).isFile()) {
+        const buf = await readFile(file);
+        if (!buf.includes(0)) {
+          insertions = countLines(buf.subarray(0, TEXT_CAP).toString("utf8"));
+        }
       }
     } catch {
       insertions = 0;

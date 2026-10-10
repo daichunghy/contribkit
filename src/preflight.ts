@@ -15,6 +15,7 @@ export type CommandExecutor = (
 export async function spawnArgv(
   argv: readonly string[],
   cwd: string,
+  timeoutMs = 120_000,
 ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
   const cmd = argv[0];
   if (cmd === undefined) return { exitCode: 1, stdout: "", stderr: "empty argv" };
@@ -52,13 +53,19 @@ export async function spawnArgv(
       }
     });
     child.on("error", reject);
+    let timedOut = false;
+    let hardStop: ReturnType<typeof setTimeout> | undefined;
     const timer = setTimeout(() => {
+      timedOut = true;
       child.kill("SIGTERM");
-    }, 120_000);
+      // A target test may deliberately ignore SIGTERM. Always bound its life.
+      hardStop = setTimeout(() => { child.kill("SIGKILL"); }, 5_000);
+    }, timeoutMs);
     child.on("close", (code) => {
       clearTimeout(timer);
+      if (hardStop !== undefined) clearTimeout(hardStop);
       resolvePromise({
-        exitCode: code ?? 1,
+        exitCode: timedOut ? 124 : code ?? 1,
         stdout: Buffer.concat(out).toString("utf8"),
         stderr: Buffer.concat(err).toString("utf8"),
       });

@@ -1,11 +1,14 @@
 import { execFile as execFileCallback } from "node:child_process";
-import { mkdir, rename, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, it, vi } from "vitest";
 import { evaluate } from "../src/evaluate.js";
 import { preflight } from "../src/preflight.js";
 import { buildSnapshot, resolveRef } from "../src/repo.js";
+import { compile } from "../src/compile.js";
+import { spawnArgv } from "../src/preflight.js";
 import { blockRule, emptySnapshot, makeContract, stageFixture } from "./helpers.js";
 
 const execFile = promisify(execFileCallback);
@@ -45,6 +48,35 @@ describe("git snapshot reliability", () => {
     ]);
     const receipt = evaluate(contract, snapshot);
     expect(receipt.status).toBe("needs-human");
+  });
+
+  it("does not read untracked symlink targets when counting diff lines", async () => {
+    const repo = await stageFixture("pass-clean");
+    await writeFile(join(repo, "local.txt"), "very\nsensitive\nlines\n", "utf8");
+    await symlink(join(repo, "local.txt"), join(repo, "link.txt"));
+    const snapshot = await buildSnapshot(repo, "HEAD");
+    expect(snapshot.changedPaths).toContain("link.txt");
+    expect(snapshot.pathDiffs?.find((row) => row.path === "link.txt")?.insertions).toBe(0);
+  });
+
+  it("does not follow symlinks while compiling a non-Git fixture", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ck-untrusted-"));
+    const outside = await mkdtemp(join(tmpdir(), "ck-secret-"));
+    try {
+      await writeFile(join(outside, "private.txt"), "not repository data\n", "utf8");
+      await symlink(join(outside, "private.txt"), join(root, "LICENSE"));
+      const contract = await compile({ repoPath: root });
+      expect(contract.sources.some((source) => source.path === "LICENSE")).toBe(false);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+      await rm(outside, { recursive: true, force: true });
+    }
+  });
+
+  it("terminates a stuck test process with a distinct timeout code", async () => {
+    const repo = await stageFixture("pass-clean");
+    const result = await spawnArgv([process.execPath, "-e", "setInterval(() => {}, 1000)"], repo, 100);
+    expect(result.exitCode).toBe(124);
   });
 
   it("uses git's option separator for user-supplied revisions", async () => {
