@@ -76,6 +76,11 @@ export interface PreflightOptions extends CompileOptions {
   executeCommand?: CommandExecutor;
 }
 
+/**
+ * Run each distinct allowlisted command required by the contract. A
+ * multi-language repository may need more than one successful test record.
+ * Execution is always sequential and requires explicit --run-tests.
+ */
 async function maybeRunTests(
   contract: ContributionContract,
   repoPath: string,
@@ -85,31 +90,43 @@ async function maybeRunTests(
 ): Promise<RecordedCommand[]> {
   const recorded = [...existing];
   if (!runTests) return recorded;
-  const rule = [...contract.rules, ...contract.advisory, ...contract.needsHuman].find(
-    (item) => item.check === "command_recorded" && item.command !== undefined,
-  );
-  const command = rule?.command;
-  if (command === undefined) return recorded;
-  const argv = allowlistedArgv(command);
-  if (argv === undefined) return recorded;
-  try {
-    const result = await executeCommand(argv, repoPath);
-    const log = redactSecrets(`${result.stdout}\n${result.stderr}`);
-    const entry: RecordedCommand = {
-      command: argv.join(" "),
-      exitCode: result.exitCode,
-      source: "executed",
-      logDigest: digestText(log),
-    };
-    recorded.push(entry);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "spawn failed";
-    recorded.push({
-      command: argv.join(" "),
-      exitCode: 127,
-      source: "executed",
-      logDigest: digestText(redactSecrets(message)),
-    });
+
+  const seen = new Set<string>();
+  const commands: string[][] = [];
+  for (const rule of [...contract.rules, ...contract.advisory, ...contract.needsHuman]) {
+    if (rule.check !== "command_recorded" || rule.command === undefined) continue;
+    const argv = allowlistedArgv(rule.command);
+    if (argv === undefined) continue;
+    const key = argv.join("\0");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    commands.push(argv);
+  }
+  // Bundled adapters currently expose at most 13 commands. Fail closed if
+  // future configuration unexpectedly asks to execute an excessive number.
+  if (commands.length > 16) {
+    throw new Error("contribkit refuses to run more than 16 distinct test commands.");
+  }
+
+  for (const argv of commands) {
+    try {
+      const result = await executeCommand(argv, repoPath);
+      const log = redactSecrets(result.stdout + "\n" + result.stderr);
+      recorded.push({
+        command: argv.join(" "),
+        exitCode: result.exitCode,
+        source: "executed",
+        logDigest: digestText(log),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "spawn failed";
+      recorded.push({
+        command: argv.join(" "),
+        exitCode: 127,
+        source: "executed",
+        logDigest: digestText(redactSecrets(message)),
+      });
+    }
   }
   return recorded;
 }

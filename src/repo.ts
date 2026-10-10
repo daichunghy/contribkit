@@ -66,7 +66,8 @@ export async function isGitRepo(repoPath: string): Promise<boolean> {
 }
 
 export async function resolveRef(repoPath: string, ref: string): Promise<string> {
-  const result = await git(repoPath, ["rev-parse", "--verify", ref]);
+  // Separate user-supplied revisions from options and resolve to a commit.
+  const result = await git(repoPath, ["rev-parse", "--verify", "--end-of-options", ref + "^{commit}"]);
   if (result.code !== 0) {
     throw new RepoError(`cannot resolve git ref ${ref}: ${result.stderr.trim()}`);
   }
@@ -186,23 +187,37 @@ function countLines(text: string): number {
 }
 
 async function untrackedFiles(repoPath: string): Promise<string[]> {
-  const listed = await git(repoPath, ["ls-files", "-o", "--exclude-standard"]);
+  const listed = await git(repoPath, ["ls-files", "-o", "-z", "--exclude-standard"]);
   if (listed.code !== 0) return [];
-  return listed.stdout
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
+  // -z retains literal tabs, newlines, leading spaces and backslashes.
+  return listed.stdout.split("\0").filter((name) => name.length > 0);
 }
 
+/**
+ * git diff --numstat -z output. A rename uses an empty path field followed
+ * by old-path\0new-path\0. Account for both ends of a rename: moving a file
+ * out of a protected path still affects that protected path.
+ */
 function parseNumstat(stdout: string): PathDiff[] {
   const diffs: PathDiff[] = [];
-  for (const line of stdout.split(/\r?\n/)) {
-    if (line.length === 0) continue;
-    const parts = line.split("\t");
-    const insRaw = parts[0];
-    const delRaw = parts[1];
-    const path = parts[2];
-    if (insRaw === undefined || delRaw === undefined || path === undefined) continue;
+  const entries = stdout.split("\0");
+  let index = 0;
+  while (index < entries.length) {
+    const header = entries[index++];
+    if (!header) continue;
+    const first = header.indexOf("\t");
+    const second = first < 0 ? -1 : header.indexOf("\t", first + 1);
+    if (first < 0 || second < 0) continue;
+    const insRaw = header.slice(0, first);
+    const delRaw = header.slice(first + 1, second);
+    let path = header.slice(second + 1);
+    if (path.length === 0) {
+      const oldPath = entries[index++];
+      const newPath = entries[index++];
+      if (!oldPath || !newPath) continue;
+      diffs.push({ path: oldPath, insertions: 0, deletions: 0 });
+      path = newPath;
+    }
     const insertions = insRaw === "-" ? 0 : Number.parseInt(insRaw, 10);
     const deletions = delRaw === "-" ? 0 : Number.parseInt(delRaw, 10);
     diffs.push({
@@ -215,7 +230,7 @@ function parseNumstat(stdout: string): PathDiff[] {
 }
 
 export async function commitMessagesSince(repoPath: string, baseRef: string): Promise<string[]> {
-  const range = await git(repoPath, ["log", "--format=%B%x1f", `${baseRef}..HEAD`]);
+  const range = await git(repoPath, ["log", "--format=%B%x1f", baseRef + "..HEAD"]);
   const messages: string[] = [];
   if (range.code === 0 && range.stdout.trim().length > 0) {
     for (const part of range.stdout.split("\x1f")) {
@@ -223,10 +238,7 @@ export async function commitMessagesSince(repoPath: string, baseRef: string): Pr
       if (text.length > 0) messages.push(text);
     }
   }
-  if (messages.length === 0) {
-    const head = await git(repoPath, ["log", "-1", "--format=%B"]);
-    if (head.code === 0 && head.stdout.trim().length > 0) messages.push(head.stdout.replace(/\n+$/, ""));
-  }
+  // No commits since base means no DCO proof; do not borrow the base commit.
   return messages;
 }
 
@@ -244,9 +256,9 @@ export async function buildSnapshot(
       `not a git repository root: ${abs}. Pass the clone root via --repo, or git init that directory. Nested folders of another repo are not used as a substitute.`,
     );
   }
-  await resolveRef(abs, baseRef);
+  const baseSha = await resolveRef(abs, baseRef);
 
-  const numstat = await git(abs, ["diff", "--numstat", baseRef]);
+  const numstat = await git(abs, ["diff", "--numstat", "-z", "--no-ext-diff", baseSha, "--"]);
   if (numstat.code !== 0) {
     throw new RepoError(`git diff failed against ${baseRef}: ${numstat.stderr.trim()}`);
   }
@@ -281,7 +293,7 @@ export async function buildSnapshot(
 
   const author = await gitAuthor(abs);
   const branch = await currentBranch(abs);
-  const messages = await commitMessagesSince(abs, baseRef);
+  const messages = await commitMessagesSince(abs, baseSha);
 
   const snapshot: EvaluationSnapshot = {
     diffStat: { files: changedPaths.length, insertions, deletions },
