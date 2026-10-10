@@ -20,6 +20,22 @@ the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility claim.
 > [star it](https://github.com/daichunghy/contribkit/stargazers). That is the
 > only growth signal this repo tracks.
 
+## First-use experience on the development branch
+
+For a checked-out copy of this branch, run:
+
+```sh
+node dist/src/cli.js check --repo .
+node dist/src/cli.js check --repo . --base origin/main --body-file pr.md
+```
+
+The read-only default groups findings into blockers, human review and suggestions.
+The new `check` exit codes are 0 (pass), 1 (blocked), 3 (needs-human) and 2 (usage error). Legacy `preflight` retains existing semantics.
+It prefers upstream Git references and explicitly warns when it must fall back
+to HEAD. Add `--run-tests` only when you trust the target repository code.
+The existing `preflight` command, receipt schema and MCP tools are unchanged.
+**The `check` command is not part of the published npm alpha.7 release.**
+
 The fastest first result on the current repository is:
 
 ```sh
@@ -96,10 +112,9 @@ handshake (2024-11-05 and 2025-11-25), not the newer stateless MCP variant.
 
 ### Development branch versus npm
 
-Fixes under review in [PR #58](https://github.com/daichunghy/contribkit/pull/58)
-are **not part of the published `0.1.0-alpha.7` npm package**. Install
-and test this source branch only if you need those unreleased fixes; do not
-describe them as published functionality.
+The changes from [PR #58](https://github.com/daichunghy/contribkit/pull/58)
+are merged on `main`, but are **not included in the published `0.1.0-alpha.7` npm package**.
+The new `check` command in PR #66 is also unreleased.
 
 ## What is shipped
 

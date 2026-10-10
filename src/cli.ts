@@ -7,7 +7,7 @@ import { canonicalJson } from "./canonical.js";
 import { compile } from "./compile.js";
 import { explainReceipt, formatReceipt, statusExitCode } from "./explain.js";
 import { preflight } from "./preflight.js";
-import { RepoError } from "./repo.js";
+import { git, RepoError } from "./repo.js";
 import { assertReceipt } from "./schema.js";
 import { VERSION } from "./version.js";
 import type { PreflightReceipt } from "./types.js";
@@ -29,14 +29,18 @@ function help(): string {
     `contribkit ${VERSION}`,
     "Contribution preflight — do not open the PR until the repo contract is satisfied.",
     "",
+    "Quick start: contribkit check [--repo .] [--base origin/main]",
+    "",
     "Usage:",
+    "  contribkit check [--repo <path>] [--base <ref>] [--body-file <file>] [--json] [--out <file>] [--run-tests]",
     "  contribkit compile --repo <path> [--ref <git-ref>] [--out <file>] [--json]",
     "  contribkit preflight --repo <path> --base <git-ref> [--body <text> | --body-file <file>]",
     "                       [--out <file>] [--json] [--run-tests] [--allow] [--ref <trusted-policy-ref>]",
     "  contribkit explain <receipt.json> [--json]",
     "  contribkit mcp",
     "",
-    "Exit codes (preflight): blocked → 1; pass and needs-human → 0.",
+    "check exit codes: pass 0; blocked 1; needs-human 3; invalid arguments 2.",
+    "Legacy preflight: blocked 1; pass and needs-human 0.",
     "CONTRIBKIT_ALLOW=1 or --allow sets receipt.overridden = true; it does not rewrite argv.",
     "--base selects the trusted policy revision; --ref overrides it only by explicit choice.",
     "--run-tests is opt-in: up to 16 distinct allowlisted argv, never arbitrary shell strings.",
@@ -59,6 +63,30 @@ function hasFlag(argv: readonly string[], name: string): boolean {
 async function writeOut(path: string | undefined, text: string): Promise<void> {
   if (path === undefined) return;
   await writeFile(path, text.endsWith("\n") ? text : `${text}\n`, "utf8");
+}
+
+async function autoBase(repo: string): Promise<{ ref: string; warning?: string }> {
+  for (const candidate of ["origin/main", "origin/master", "origin/HEAD"]) {
+    const result = await git(repo, ["rev-parse", "--verify", "--end-of-options", candidate + "^{commit}"]);
+    if (result.code === 0) return { ref: candidate };
+  }
+  return { ref: "HEAD", warning: "No upstream base found. HEAD only checks uncommitted changes. Pass --base <trusted-ref> to check commits on your branch." };
+}
+
+function formatCheck(receipt: PreflightReceipt, base: string, count: number, warning?: string): string {
+  const missing = receipt.findings.filter((f) => !f.passed);
+  const lines = ["ContribKit check: " + receipt.status, "Base: " + base, "Changed files: " + count];
+  if (warning) lines.push("Warning: " + warning);
+  if (count === 0) lines.push("No differences found; this is not evidence that a future PR is ready.");
+  for (const [severity, title] of [["block", "Fix before PR"], ["needs-human", "Human review"], ["advisory", "Suggestions"]]) {
+    const items = missing.filter((f) => f.severity === severity);
+    if (items.length === 0) continue;
+    lines.push("", title + " (" + items.length + ")");
+    for (const item of items) lines.push("  - " + item.message + " [" + item.origin + "]");
+  }
+  if (missing.length === 0 && count > 0) lines.push("No unmet rules found. CI and maintainer approval remain separate.");
+  lines.push("", "Next: --body-file pr.md supplies PR details; --run-tests executes trusted project tests only.");
+  return lines.join("\n") + "\n";
 }
 
 export async function runCli(argv: string[], io: CliIo = defaultIo): Promise<number> {
@@ -94,6 +122,28 @@ export async function runCli(argv: string[], io: CliIo = defaultIo): Promise<num
         io.stdout.write(`wrote ${out}\n`);
       }
       return 0;
+    }
+
+    if (command === "check") {
+      const repo = flagValue(argv, "--repo") ?? ".";
+      const explicitBase = flagValue(argv, "--base");
+      const selected = explicitBase === undefined ? await autoBase(repo) : { ref: explicitBase };
+      const body = flagValue(argv, "--body");
+      const bodyFile = flagValue(argv, "--body-file");
+      if (body !== undefined && bodyFile !== undefined) {
+        io.stderr.write("Use --body or --body-file, not both.\n");
+        return 2;
+      }
+      const prBodyDraft = bodyFile !== undefined ? await readFile(bodyFile, "utf8") : body;
+      const result = await preflight({
+        repoPath: repo, baseRef: selected.ref, runTests: hasFlag(argv, "--run-tests"),
+        ...(prBodyDraft !== undefined ? { prBodyDraft } : {}),
+      });
+      const receiptText = canonicalJson(result.receipt) + "\n";
+      await writeOut(out, receiptText);
+      if (json) io.stdout.write(receiptText);
+      else io.stdout.write(formatCheck(result.receipt, selected.ref, result.snapshot.changedPaths.length, "warning" in selected ? selected.warning : undefined));
+      return result.receipt.status === "needs-human" ? 3 : statusExitCode(result.receipt.status);
     }
 
     if (command === "preflight") {
