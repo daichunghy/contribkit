@@ -136,7 +136,9 @@ export async function preflight(options: PreflightOptions): Promise<{
   snapshot: EvaluationSnapshot;
   receipt: PreflightReceipt;
 }> {
-  const compileOpts = { repoPath: options.repoPath, ...(options.ref !== undefined ? { ref: options.ref } : {}) };
+  // An author-controlled HEAD can modify CONTRIBUTING or contribkit.yml.
+  // Default to the caller's trusted diff base, not the proposed branch.
+  const compileOpts = { repoPath: options.repoPath, ref: options.ref ?? options.baseRef };
   const contract = await compile(compileOpts);
   const recorded = await maybeRunTests(
     contract,

@@ -67,6 +67,7 @@ export function blockRule(over: Partial<ContractRule> & Pick<ContractRule, "id" 
   if (over.glob !== undefined) rule.glob = over.glob;
   if (over.ignore !== undefined) rule.ignore = over.ignore;
   if (over.patterns !== undefined) rule.patterns = over.patterns;
+  if (over.codeownerRules !== undefined) rule.codeownerRules = over.codeownerRules;
   if (over.keys !== undefined) rule.keys = over.keys;
   return rule;
 }

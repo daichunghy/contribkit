@@ -78,10 +78,14 @@ function checkPasses(rule: ContractRule, snapshot: EvaluationSnapshot): boolean 
     }
     case "path_owned": {
       const patterns = rule.patterns ?? (rule.glob !== undefined ? [rule.glob] : []);
-      const ignore = rule.ignore;
-      const changed = filteredPaths(snapshot, ignore);
-      if (patterns.length === 0) return true;
-      const synthetic = patterns.map((pattern, index) => ({
+      const changed = filteredPaths(snapshot, rule.ignore);
+      // Preserve order and ownerless last-match overrides from CODEOWNERS.
+      // Older contracts without codeownerRules retain their original behavior.
+      const synthetic = rule.codeownerRules?.map((entry, index) => ({
+        pattern: entry.pattern,
+        owners: entry.hasOwners ? ["@owners"] : [],
+        line: index + 1,
+      })) ?? patterns.map((pattern, index) => ({
         pattern,
         owners: ["@owners"],
         line: index + 1,
