@@ -104,7 +104,22 @@ export function classifyHookInput(payload: unknown): HookTarget {
       : { action: "ignore" };
   }
   const invocation = prInvocationStart(tokens);
-  if (!invocation) return { action: "ignore" };
+  if (!invocation) {
+    // An invocation hidden inside sh -c / bash -lc / pwsh -Command cannot be
+    // reliably inspected without executing a shell. Refuse it rather than
+    // silently skipping the PR creation gate. Ordinary echo commands remain
+    // outside the scope of this hook.
+    const wrapper = tokens.some((token) => {
+      const command = token.replace(/\\/g, "/").split("/").pop()?.toLowerCase();
+      return command === "sh" || command === "bash" || command === "zsh" ||
+        command === "pwsh" || command === "powershell" || command === "cmd" ||
+        command === "cmd.exe";
+    });
+    if (wrapper && /\b(?:gh(?:\.exe)?\s+pr\s+create|glab(?:\.exe)?\s+mr\s+create)\b/i.test(nested.command)) {
+      return { action: "invalid", reason: "PR creation inside a shell wrapper cannot be verified; invoke gh/glab directly" };
+    }
+    return { action: "ignore" };
+  }
   let body: string | undefined;
   let bodyFile: string | undefined;
   let requestedBase: string | undefined;
