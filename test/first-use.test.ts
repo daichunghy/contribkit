@@ -59,4 +59,23 @@ describe("first-use CLI path", () => {
       await rm(repo, { recursive: true, force: true });
     }
   });
+  it("check presents useful repair steps for missing PR evidence", async () => {
+    const repo = await stageFixture("missing-issue");
+    const result = await captureCli(["check", "--repo", repo, "--base", "HEAD"]);
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain("Fix before PR");
+    expect(result.stdout).toContain("Link an issue");
+    expect(result.stdout).toContain("Changed files:");
+  });
+
+  it("check warns on HEAD fallback and supports receipt JSON", async () => {
+    const clean = await stageFixture("pass-clean");
+    const fallback = await captureCli(["check", "--repo", clean]);
+    expect(fallback.stdout).toContain("No upstream base found");
+    const missing = await stageFixture("missing-issue");
+    const report = await captureCli(["check", "--repo", missing, "--base", "HEAD", "--json"]);
+    const receipt: unknown = JSON.parse(report.stdout);
+    assertReceipt(receipt);
+  });
+
 });
