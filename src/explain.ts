@@ -23,6 +23,25 @@ export function formatReceipt(receipt: PreflightReceipt): string {
   lines.push(...section("needs-human", human));
   lines.push(...section("advisory", advisory));
   if (failed.length === 0) lines.push("all contract checks passed");
+  else {
+    const actions: string[] = [];
+    if (blocked.some((row) => row.ruleId === "issue-link")) {
+      actions.push("Add a real issue reference in the PR body, for example Fixes #123.");
+    }
+    if (blocked.some((row) => row.check === "command_recorded")) {
+      actions.push("Run trusted tests separately, or explicitly opt in with --run-tests.");
+    }
+    if (blocked.some((row) => row.check === "pr_checkboxes") || advisory.some((row) => row.check === "pr_checkboxes")) {
+      actions.push("Complete the pull request checklist in --body-file FILE.");
+    }
+    if (human.length > 0) {
+      actions.push("Ask a maintainer to review the needs-human findings; the receipt is not an approval.");
+    }
+    if (actions.length > 0) lines.push("next steps:", ...actions.map((item) => "  - " + item));
+  }
+  lines.splice(2, 0,
+    "summary " + blocked.length + " blocker(s), " + human.length +
+    " human review(s), " + advisory.length + " advisory finding(s)");
   return `${lines.join("\n")}\n`;
 }
 

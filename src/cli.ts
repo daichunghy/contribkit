@@ -192,6 +192,10 @@ export async function runCli(argv: string[], io: CliIo = defaultIo): Promise<num
     io.stdout.write(help() + "\n");
     return 0;
   }
+  if (argv.slice(1).includes("--help") || argv.slice(1).includes("-h")) {
+    io.stdout.write(help() + "\n");
+    return 0;
+  }
   if (command === "-v" || command === "--version" || command === "version") {
     io.stdout.write(VERSION + "\n");
     return 0;
@@ -224,13 +228,14 @@ export async function runCli(argv: string[], io: CliIo = defaultIo): Promise<num
       const body = value("--body-file") !== undefined
         ? await readBodyFile(value("--body-file") ?? "")
         : value("--body");
+      const policyRef = value("--ref");
       const result = await preflight({
         repoPath: repo,
         baseRef: base.sha,
         runTests: flagged("--run-tests"),
         overridden: flagged("--allow") || io.env.CONTRIBKIT_ALLOW === "1",
         ...(body !== undefined ? { prBodyDraft: body } : {}),
-        ...(value("--ref") !== undefined ? { ref: value("--ref") } : {}),
+        ...(policyRef !== undefined ? { ref: policyRef } : {}),
       });
       const receipt = result.receipt;
       const content = canonicalJson(receipt) + "\n";
@@ -238,6 +243,9 @@ export async function runCli(argv: string[], io: CliIo = defaultIo): Promise<num
       if (flagged("--json")) io.stdout.write(content);
       else {
         io.stdout.write("base " + base.ref + " (" + base.sha.slice(0, 10) + ")\n");
+        if (result.snapshot.changedPaths.length === 0) {
+          io.stdout.write("No changed files against this base; this checks the clean working tree, not pending PR commits.\n");
+        }
         io.stdout.write(formatReceipt(receipt));
       }
       return statusExitCode(receipt.status, flagged("--strict"));
