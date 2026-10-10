@@ -78,4 +78,11 @@ describe("first-use CLI path", () => {
     assertReceipt(receipt);
   });
 
+  it("check returns distinct nonzero code when human review is required", async () => {
+    const repo = await stageFixture("codeowners-path");
+    const result = await captureCli(["check", "--repo", repo, "--base", "HEAD"]);
+    expect(result.code).toBe(3);
+    expect(result.stdout).toContain("Human review");
+  });
+
 });

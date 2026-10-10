@@ -39,7 +39,8 @@ function help(): string {
     "  contribkit explain <receipt.json> [--json]",
     "  contribkit mcp",
     "",
-    "Exit codes (preflight): blocked → 1; pass and needs-human → 0.",
+    "check exit codes: pass 0; blocked 1; needs-human 3; invalid arguments 2.",
+    "Legacy preflight: blocked 1; pass and needs-human 0.",
     "CONTRIBKIT_ALLOW=1 or --allow sets receipt.overridden = true; it does not rewrite argv.",
     "--base selects the trusted policy revision; --ref overrides it only by explicit choice.",
     "--run-tests is opt-in: up to 16 distinct allowlisted argv, never arbitrary shell strings.",
@@ -142,7 +143,7 @@ export async function runCli(argv: string[], io: CliIo = defaultIo): Promise<num
       await writeOut(out, receiptText);
       if (json) io.stdout.write(receiptText);
       else io.stdout.write(formatCheck(result.receipt, selected.ref, result.snapshot.changedPaths.length, "warning" in selected ? selected.warning : undefined));
-      return statusExitCode(result.receipt.status);
+      return result.receipt.status === "needs-human" ? 3 : statusExitCode(result.receipt.status);
     }
 
     if (command === "preflight") {
