@@ -5,7 +5,7 @@ export type HookTarget =
   | { action: "invalid"; reason: string }
   | { action: "guard"; body?: string; bodyFile?: string; requestedBase?: string };
 
-function shellTokens(command: string): string[] | undefined {
+function shellTokens(command: string, powerShell = false): string[] | undefined {
   const tokens: string[] = [];
   let current = "";
   let quote: "'" | '"' | undefined;
@@ -22,7 +22,7 @@ function shellTokens(command: string): string[] | undefined {
       escaping = false;
       continue;
     }
-    if (char === "\\" && quote !== "'") {
+    if (char === "\\" && !powerShell && quote !== "'") {
       escaping = true;
       continue;
     }
@@ -85,7 +85,7 @@ export function classifyHookInput(payload: unknown): HookTarget {
   if (typeof nested.command !== "string") {
     return { action: "invalid", reason: "missing shell command" };
   }
-  const tokens = shellTokens(nested.command);
+  const tokens = shellTokens(nested.command, tool === "PowerShell");
   if (!tokens) {
     // Fail closed for a likely PR command with malformed quoting.
     return /\b(?:gh|glab)(?:\.exe)?\s+(?:pr|mr)\s+create\b/i.test(nested.command)

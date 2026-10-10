@@ -30,6 +30,10 @@ describe("Claude PreToolUse PR detection", () => {
       tool_name: "Bash",
       tool_input: { command: "gh pr create --body=$(echo risky)" },
     }).action).toBe("guard");
+    expect(classifyHookInput({
+      tool_name: "PowerShell",
+      tool_input: { command: "C:\\tools\\gh.exe pr create --body 'Fixes #8'" },
+    })).toMatchObject({ action: "guard", body: "Fixes #8" });
     expect(remoteBaseRef("main")).toBe("origin/main");
   });
 

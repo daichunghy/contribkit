@@ -67,7 +67,9 @@ async function main() {
     const version = run(process.execPath, [binary, "--version"], consumer).trim();
     if (!/^0\.1\.0-alpha\.\d+$/.test(version)) fail(`installed binary returned unexpected version: ${version}`);
     const help = run(process.execPath, [binary, "--help"], consumer);
-    if (!help.includes("Contribution preflight")) fail("installed binary did not load the packaged CLI");
+    if (!help.includes("contribkit doctor") || !help.includes("contribkit check")) {
+      fail("installed binary does not expose the documented first-use commands");
+    }
     run(
       process.execPath,
       ["--input-type=module", "-e", "import('contribkit').then(({ VERSION }) => { if (typeof VERSION !== 'string') process.exit(1); })"],
