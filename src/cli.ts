@@ -183,7 +183,8 @@ async function doctor(repo: string, explicitBase: string | undefined, json: bool
       io.stdout.write("Warning: HEAD omits commits already made on this branch. Choose a review target for real PRs.\n");
     }
     if (base.source === "remote") {
-      io.stdout.write("Note: remote-tracking refs are cached locally; git fetch " + base.ref.split("/")[0] + " to refresh them.\n");
+      io.stdout.write("Note: local remote-tracking refs may be stale; git fetch " + base.ref.split("/")[0] + " to refresh them.\n");
+      io.stdout.write("Verify this remote points to the repository receiving your PR (especially with forks).\n");
     }
   }
   return 0;
