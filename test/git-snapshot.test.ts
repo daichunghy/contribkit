@@ -79,6 +79,23 @@ describe("git snapshot reliability", () => {
     expect(result.exitCode).toBe(124);
   });
 
+  it("refuses to execute any target tests when the target is not a Git root", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ck-not-a-repo-"));
+    const executeCommand = vi.fn(async () => ({ exitCode: 0, stdout: "ok", stderr: "" }));
+    try {
+      await writeFile(join(root, "package.json"), '{"scripts":{"test":"echo unsafe"}}');
+      await expect(preflight({
+        repoPath: root,
+        baseRef: "HEAD",
+        runTests: true,
+        executeCommand,
+      })).rejects.toThrow(/not a git repository root/);
+      expect(executeCommand).not.toHaveBeenCalled();
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("uses git's option separator for user-supplied revisions", async () => {
     const repo = await stageFixture("pass-clean");
     await expect(resolveRef(repo, "--help")).rejects.toThrow(/cannot resolve git ref/);

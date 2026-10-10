@@ -4,7 +4,7 @@ import { compile, type CompileOptions } from "./compile.js";
 import { digestText } from "./canonical.js";
 import { evaluate } from "./evaluate.js";
 import { redactSecrets } from "./redact.js";
-import { buildSnapshot } from "./repo.js";
+import { buildSnapshot, isGitRepo, RepoError, resolveRef } from "./repo.js";
 import type { ContributionContract, EvaluationSnapshot, PreflightReceipt, RecordedCommand } from "./types.js";
 
 export type CommandExecutor = (
@@ -145,6 +145,12 @@ export async function preflight(options: PreflightOptions): Promise<{
 }> {
   // An author-controlled HEAD can modify CONTRIBUTING or contribkit.yml.
   // Default to the caller's trusted diff base, not the proposed branch.
+  // Reject a wrong/nested working directory or invalid base *before* any
+  // opt-in target script has a chance to run.
+  if (!(await isGitRepo(options.repoPath))) {
+    throw new RepoError("not a git repository root: " + options.repoPath);
+  }
+  await resolveRef(options.repoPath, options.baseRef);
   const compileOpts = { repoPath: options.repoPath, ref: options.ref ?? options.baseRef };
   const contract = await compile(compileOpts);
   const recorded = await maybeRunTests(
