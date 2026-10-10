@@ -43,6 +43,8 @@
 | T22 | GitLab MR CLI flags are interpreted using GitHub CLI semantics | Parse glab --description/-d and --target-branch/-b separately from gh PR flags. |
 | T23 | Hook permits PR creation on needs-human without recorded human decision | Treat needs-human as unresolved and deny PR creation unless explicitly overridden. |
 
+| T24 | A nested shell wrapper launches a PR command without the handler recognizing an argv triple | Refuse statically uninspectable sh/bash/pwsh wrapped PR commands; the hook is still best-effort, not a merge gate. |
+
 ## Non-claims
 
 We do not claim memory-safe parsing of every CODEOWNERS dialect, or that a `pass` receipt means the PR will be merged.
