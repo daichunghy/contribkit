@@ -55,7 +55,7 @@ required to run the basic checks.
 | `pass` | All **blocking** and human-decision checks passed | You may continue preparing your PR; code quality still needs review |
 | `blocked` | At least one mandatory condition failed | Fix the listed item, then rerun |
 | `needs-human` | An unresolved decision requires human attention | Ask a maintainer to review the indicated paths or policy |
-| `advisory` | A recommendation that does not block by itself | Consider the suggestion before submitting |
+Advisory findings are shown within any of the three results above. They do not constitute a separate receipt status and do not block the PR by themselves.
 
 A clean tree relative to `HEAD` is **not** proof that your branch is ready.
 That command only checks uncommitted work. ContribKit therefore selects the
