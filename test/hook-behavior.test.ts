@@ -15,6 +15,14 @@ describe("Claude PreToolUse PR detection", () => {
     expect(classifyHookInput({ tool_name: "Bash", tool_input: { command: "git push origin main" } })).toEqual({ action: "ignore" });
     expect(classifyHookInput({ tool_name: "Bash", tool_input: { command: "echo 'gh pr create --body test'" } })).toEqual({ action: "ignore" });
     expect(classifyHookInput({ tool_name: "Read", tool_input: {} })).toEqual({ action: "ignore" });
+    expect(classifyHookInput({
+      tool_name: "Bash",
+      tool_input: { command: "bash -lc 'gh pr create --body \"Fixes #9\"'" },
+    })).toMatchObject({ action: "invalid" });
+    expect(classifyHookInput({
+      tool_name: "PowerShell",
+      tool_input: { command: 'pwsh -Command "glab mr create --target-branch main"' },
+    })).toMatchObject({ action: "invalid" });
   });
 
   it("detects both CLI vendors and captures quoted body and branch without shell evaluation", () => {
