@@ -11,7 +11,10 @@
 
 The command-line interface never falls back to HEAD just to produce an easy
 pass. The remote-tracking base is a cached Git ref; users remain responsible
-for fetching updates.
+for fetching updates. Clones with both `origin` and `upstream` must specify
+an explicit review target instead of incorrectly accepting the fork as
+source of the maintainer's rules. GitLab and GitHub CLIs expose different
+PR-description and base flags; hook parsing is separated by vendor.
 
 ## Processing pipeline
 

@@ -73,10 +73,11 @@ export async function handleHookEvent(
       ...(body !== undefined ? { prBodyDraft: body } : {}),
       overridden: allow,
     });
-    if (receipt.status === "blocked" && !allow) {
-      const blockers = receipt.findings.filter((item) => !item.passed && item.severity === "block");
-      const steps = blockers.map((item) => item.ruleId + ": " + item.message);
-      return steps.length > 0 ? steps.join("; ") : "contribkit preflight blocked";
+    if (receipt.status !== "pass" && !allow) {
+      const unresolved = receipt.findings.filter((item) => !item.passed && item.severity !== "advisory");
+      const steps = unresolved.map((item) => item.ruleId + ": " + item.message);
+      return steps.length > 0 ? steps.join("; ") :
+        "contribkit " + receipt.status + ": explicit maintainer review is still required";
     }
     return undefined;
   } catch (error) {

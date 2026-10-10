@@ -113,4 +113,17 @@ describe("Claude PreToolUse PR detection", () => {
     })).toBeUndefined();
   });
 
+  it("requires an explicit override for an unresolved human-review decision", async () => {
+    const repo = await stageFixture("codeowners-path");
+    const sha = (await execFile("git", ["rev-parse", "HEAD"], { cwd: repo })).stdout.trim();
+    await execFile("git", ["update-ref", "refs/remotes/origin/main", sha], { cwd: repo });
+    const event = {
+      cwd: repo,
+      tool_name: "mcp__github__create_pull_request",
+      tool_input: { body: "Fixes #321", base_branch: "main" },
+    };
+    expect(await handleHookEvent(event, { cwd: repo, env: {} })).toMatch(/codeowners/);
+    expect(await handleHookEvent(event, { cwd: repo, env: { CONTRIBKIT_ALLOW: "1" } })).toBeUndefined();
+  });
+
 });

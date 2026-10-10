@@ -13,6 +13,9 @@ All notable changes are documented here, newest first. Entries mirror the tagged
   detects tampering but does not authenticate authorship.
 - Hardened Claude PR hooks to inspect only PR-create operations, extracting
   inline and body-file evidence without executing the command.
+- Improved fork safety by refusing an ambiguous origin/upstream base;
+  updated GitLab MR flag handling and made hooks deny unresolved human review
+  until an explicit user override.
 - Added end-to-end first-use, hook and packed-package regression cases,
   a contributor journey contract and updated onboarding documentation.
   Not published in the npm alpha yet.

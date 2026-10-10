@@ -39,6 +39,10 @@
 | T19 | A tampered receipt is explained as passing | Verify digest against the current receipt body before explaining it; do not claim signature authenticity. |
 | T20 | Claude hook blocks ordinary Bash activity or misses available PR text | Inspect tool name and PR-creation argv without executing it; read explicit body files with size limits. |
 
+| T21 | A fork compares against its own origin instead of the target upstream policy | Detect origin+upstream ambiguity and require an explicit target ref; never guess. |
+| T22 | GitLab MR CLI flags are interpreted using GitHub CLI semantics | Parse glab --description/-d and --target-branch/-b separately from gh PR flags. |
+| T23 | Hook permits PR creation on needs-human without recorded human decision | Treat needs-human as unresolved and deny PR creation unless explicitly overridden. |
+
 ## Non-claims
 
 We do not claim memory-safe parsing of every CODEOWNERS dialect, or that a `pass` receipt means the PR will be merged.

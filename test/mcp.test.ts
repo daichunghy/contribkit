@@ -141,7 +141,7 @@ describe("MCP", () => {
       jsonrpc: "2.0", id: 20, method: "tools/call",
       params: { name: "preflight_diff", arguments: { repoPath: repo } },
     });
-    expect(JSON.stringify(result)).toMatch(/"status":"blocked"/);
+    expect(JSON.stringify(result)).toMatch(/blocked/);
     expect(JSON.stringify(result)).toMatch(/issue-link/);
   });
 

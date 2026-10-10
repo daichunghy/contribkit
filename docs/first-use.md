@@ -37,6 +37,10 @@ If the command reports no trusted base, choose the appropriate ref explicitly:
 node /path/to/contribkit/dist/src/cli.js doctor --base origin/develop
 ```
 
+If this is a fork and you have both `origin` and `upstream`, ContribKit
+will not guess the target policy. Fetch `upstream` and explicitly choose
+`--base upstream/main` (or your project's actual target branch).
+
 Avoid `--base HEAD` on a feature branch: it omits changes already committed
 to that branch. Use `HEAD` only when you deliberately want to check
 uncommitted local work or demonstrate the clean-clone smoke.

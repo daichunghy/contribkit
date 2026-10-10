@@ -69,6 +69,11 @@ node /path/to/contribkit/dist/src/cli.js check --repo . --base origin/develop \
   --body "Fixes #123"
 ```
 
+In a fork with both `origin` (your fork) and `upstream` (target project),
+ContribKit deliberately refuses to guess. Fetch the project remote and use
+`--base upstream/main` or the actual target branch. Claude hooks can use
+`CONTRIBKIT_BASE_REF=upstream/main` for the same situation.
+
 Remote-tracking refs are only as current as your latest fetch. The trust
 decision for `--base` belongs to you and your repository maintainer.
 
@@ -135,7 +140,10 @@ digest is not a signature or a proof of where the data came from.
 
 The optional Claude Code plugin intercepts recognized PR-creation tools
 (`gh pr create`, `glab mr create`, supported GitHub MCP calls); unrelated
-shell commands are not subject to the PR preflight hook. The local MCP stdio
+shell commands are not subject to the PR preflight hook. The hook prevents PR
+creation on `blocked` **or** `needs-human` unless the user explicitly sets
+`CONTRIBKIT_ALLOW=1`. GitLab CLI uses `--description` and `--target-branch`,
+not GitHub's `--body` and `--base` flags. The local MCP stdio
 server exposes `compile_contract`, `preflight_diff`, and
 `explain_receipt`, all without opening PRs.
 

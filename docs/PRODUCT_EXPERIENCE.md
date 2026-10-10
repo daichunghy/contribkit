@@ -56,6 +56,8 @@ test evidence.
 | Task | Evidence required | Incorrect behavior |
 | --- | --- | --- |
 | New contributor in remote-tracking clone | doctor finds correct origin base | silently compares against HEAD |
+| Fork with origin and upstream remotes | prompt for explicit target base | compare fork policy against origin/main |
+| GitLab MR CLI | capture --description and --target-branch evidence | treat -b as GitHub PR body |
 | Local-only clone | actionable error | blank or green receipt |
 | Contributor forgot issue reference | check blocks with a next step | vague failure without PR-body instructions |
 | Maintainer-owned file changed | needs-human finding | fake approval or completely invisible |
@@ -65,6 +67,7 @@ test evidence.
 | User alters receipt JSON | explain refuses digest mismatch | prints forged pass |
 | Claude runs a non-PR shell command | hook ignores without compiling repo | unrelated command denied |
 | Claude creates PR through CLI/MCP | hook examines body and correct base | bypass or only reads empty PR body |
+| Hook sees needs-human | block until explicit override | open PR as if human had approved |
 | npm consumer installs packed CLI | clean-room commands load | source-only assumptions in released package |
 | Dependency security review | vulnerable versions replaced under tests | upgrade every major without compatibility proof |
 
