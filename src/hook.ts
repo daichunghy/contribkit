@@ -6,8 +6,8 @@
 import { readFile, stat } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { resolveTrustedBase } from "./base.js";
-import { classifyHookInput, remoteBaseRef } from "./hook-input.js";
+import { resolvePrBaseRef, resolveTrustedBase } from "./base.js";
+import { classifyHookInput } from "./hook-input.js";
 import { preflight } from "./preflight.js";
 import { isRecord } from "./types.js";
 
@@ -55,13 +55,14 @@ export async function handleHookEvent(
   if (target.action === "invalid") return target.reason;
   const parsed = isRecord(payload) ? payload : {};
   const cwd = typeof parsed.cwd === "string" && parsed.cwd.length > 0 ? parsed.cwd : options.cwd;
-  const explicit =
+  const explicitlyConfigured =
     (typeof parsed.baseRef === "string" && parsed.baseRef) ||
     (typeof parsed.base_ref === "string" && parsed.base_ref) ||
-    options.env.CONTRIBKIT_BASE_REF ||
-    (target.requestedBase !== undefined ? remoteBaseRef(target.requestedBase) : undefined);
+    options.env.CONTRIBKIT_BASE_REF;
   try {
-    const base = await resolveTrustedBase(cwd, explicit);
+    const requested = explicitlyConfigured ??
+      (target.requestedBase !== undefined ? await resolvePrBaseRef(cwd, target.requestedBase) : undefined);
+    const base = await resolveTrustedBase(cwd, requested);
     const body = target.body ??
       (target.bodyFile !== undefined ? await readPrBodyFile(target.bodyFile, cwd) : undefined) ??
       (typeof parsed.prBodyDraft === "string" ? parsed.prBodyDraft : undefined);

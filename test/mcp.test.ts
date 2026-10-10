@@ -130,4 +130,19 @@ describe("MCP", () => {
     expect(JSON.stringify(compiled)).toMatch(/"isError":true/);
   });
 
+  it("autodiscovers a trusted base for MCP without requiring the ref argument", async () => {
+    const repo = await stageFixture("missing-issue");
+    const { execFile } = await import("node:child_process");
+    const { promisify } = await import("node:util");
+    const git = promisify(execFile);
+    const sha = (await git("git", ["rev-parse", "HEAD"], { cwd: repo })).stdout.trim();
+    await git("git", ["update-ref", "refs/remotes/origin/main", sha], { cwd: repo });
+    const result = await handleMcpMessage({
+      jsonrpc: "2.0", id: 20, method: "tools/call",
+      params: { name: "preflight_diff", arguments: { repoPath: repo } },
+    });
+    expect(JSON.stringify(result)).toMatch(/"status":"blocked"/);
+    expect(JSON.stringify(result)).toMatch(/issue-link/);
+  });
+
 });

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { explainReceipt } from "./explain.js";
+import { resolveTrustedBase } from "./base.js";
 import { compile } from "./compile.js";
 import { canonicalJson } from "./canonical.js";
 import { preflight } from "./preflight.js";
@@ -60,7 +61,7 @@ export const MCP_TOOLS = [
   },
   {
     name: "preflight_diff",
-    description: "Evaluate a local diff against the compiled contract. Does not open a pull request.",
+    description: "Evaluate a local diff against the trusted base contract. Auto-detects a single review remote; pass baseRef explicitly in forks. Does not open a pull request.",
     inputSchema: {
       type: "object",
       additionalProperties: false,
@@ -81,7 +82,7 @@ export const MCP_TOOLS = [
           },
         },
       },
-      required: ["repoPath", "baseRef"],
+      required: ["repoPath"],
     },
   },
   {
@@ -110,14 +111,15 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<un
     if (name === "preflight_diff") {
       const repoPath = asString(args.repoPath);
       const baseRef = asString(args.baseRef);
-      if (repoPath === undefined || baseRef === undefined) {
-        return textResult(toolError("INVALID_ARGS", "repoPath and baseRef are required"), true);
+      if (repoPath === undefined) {
+        return textResult(toolError("INVALID_ARGS", "repoPath is required"), true);
       }
+      const selectedBase = await resolveTrustedBase(repoPath, baseRef);
       const recorded = recordedCommandsOf(args.recordedCommands);
       const prBodyDraft = asString(args.prBodyDraft);
       const { receipt } = await preflight({
         repoPath,
-        baseRef,
+        baseRef: selectedBase.sha,
         ...(prBodyDraft !== undefined ? { prBodyDraft } : {}),
         ...(recorded !== undefined ? { recordedCommands: recorded } : {}),
       });

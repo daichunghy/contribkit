@@ -3,7 +3,7 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
-import { resolveTrustedBase } from "../src/base.js";
+import { resolvePrBaseRef, resolveTrustedBase } from "../src/base.js";
 import { stageFixture } from "./helpers.js";
 
 const execFile = promisify(execFileCallback);
@@ -46,4 +46,29 @@ describe("trusted base discovery", () => {
     const repo = await stageFixture("pass-clean");
     await expect(resolveTrustedBase(repo, "not-a-real-branch")).rejects.toThrow(/cannot resolve git ref/);
   });
+  it("refuses ambiguous origin and upstream fork defaults; accepts an explicit target", async () => {
+    const repo = await stageFixture("pass-clean");
+    const sha = (await execFile("git", ["rev-parse", "HEAD"], { cwd: repo })).stdout.trim();
+    await execFile("git", ["remote", "add", "origin", "https://example.invalid/user/fork.git"], { cwd: repo });
+    await execFile("git", ["remote", "add", "upstream", "https://example.invalid/project/original.git"], { cwd: repo });
+    for (const remote of ["origin", "upstream"]) {
+      await execFile("git", ["update-ref", "refs/remotes/" + remote + "/main", sha], { cwd: repo });
+    }
+    await expect(resolveTrustedBase(repo)).rejects.toThrow(/both origin and upstream/);
+    const specific = await resolveTrustedBase(repo, "upstream/main");
+    expect(specific.sha).toBe(sha);
+    expect(specific.source).toBe("explicit");
+    await expect(resolvePrBaseRef(repo, "main")).rejects.toThrow(/both origin and upstream/);
+    expect(await resolvePrBaseRef(repo, "upstream/main")).toBe("upstream/main");
+  });
+
+  it("discovers upstream when it is the only configured remote", async () => {
+    const repo = await stageFixture("pass-clean");
+    const sha = (await execFile("git", ["rev-parse", "HEAD"], { cwd: repo })).stdout.trim();
+    await execFile("git", ["remote", "add", "upstream", "https://example.invalid/original.git"], { cwd: repo });
+    await execFile("git", ["update-ref", "refs/remotes/upstream/main", sha], { cwd: repo });
+    expect((await resolveTrustedBase(repo)).ref).toBe("upstream/main");
+    expect(await resolvePrBaseRef(repo, "develop")).toBe("upstream/develop");
+  });
+
 });

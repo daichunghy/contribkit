@@ -50,15 +50,26 @@ function shellTokens(command: string, powerShell = false): string[] | undefined 
   return tokens;
 }
 
-function prInvocationStart(tokens: readonly string[]): number {
+type PrCli = "gh" | "glab";
+
+interface PrInvocation {
+  start: number;
+  vendor: PrCli;
+}
+
+function prInvocationStart(tokens: readonly string[]): PrInvocation | undefined {
   for (let i = 0; i + 2 < tokens.length; i += 1) {
     const executable = (tokens[i] ?? "").replace(/\\/g, "/").split("/").pop()?.toLowerCase();
     const sub = tokens[i + 1]?.toLowerCase();
     const action = tokens[i + 2]?.toLowerCase();
-    if ((executable === "gh" || executable === "gh.exe") && sub === "pr" && action === "create") return i;
-    if ((executable === "glab" || executable === "glab.exe") && sub === "mr" && action === "create") return i;
+    if ((executable === "gh" || executable === "gh.exe") && sub === "pr" && action === "create") {
+      return { start: i, vendor: "gh" };
+    }
+    if ((executable === "glab" || executable === "glab.exe") && sub === "mr" && action === "create") {
+      return { start: i, vendor: "glab" };
+    }
   }
-  return -1;
+  return undefined;
 }
 
 /**
@@ -92,28 +103,27 @@ export function classifyHookInput(payload: unknown): HookTarget {
       ? { action: "invalid", reason: "cannot parse PR command safely" }
       : { action: "ignore" };
   }
-  const start = prInvocationStart(tokens);
-  if (start < 0) return { action: "ignore" };
+  const invocation = prInvocationStart(tokens);
+  if (!invocation) return { action: "ignore" };
   let body: string | undefined;
   let bodyFile: string | undefined;
   let requestedBase: string | undefined;
-  for (let i = start + 3; i < tokens.length; i += 1) {
+  const ghFlags = [["--body", "-b", "body"], ["--body-file", "-F", "bodyFile"], ["--base", "-B", "base"]] as const;
+  const glabFlags = [["--description", "-d", "body"], ["--description-file", "", "bodyFile"], ["--target-branch", "-b", "base"]] as const;
+  const flags = invocation.vendor === "gh" ? ghFlags : glabFlags;
+  for (let i = invocation.start + 3; i < tokens.length; i += 1) {
     const token = tokens[i];
     if (token === ";" || token === undefined) break;
-    for (const [longFlag, shortFlag] of [
-      ["--body", "-b"],
-      ["--body-file", "-F"],
-      ["--base", "-B"],
-    ] as const) {
-      const exact = token === longFlag || token === shortFlag;
+    for (const [longFlag, shortFlag, field] of flags) {
+      const exact = token === longFlag || (shortFlag.length > 0 && token === shortFlag);
       const equals = token.startsWith(longFlag + "=");
       if (!exact && !equals) continue;
       const next = equals ? token.slice(longFlag.length + 1) : tokens[++i];
       if (!next || next === ";") {
         return { action: "invalid", reason: "missing value for " + longFlag };
       }
-      if (longFlag === "--body") body = next;
-      else if (longFlag === "--body-file") bodyFile = next;
+      if (field === "body") body = next;
+      else if (field === "bodyFile") bodyFile = next;
       else requestedBase = next;
       break;
     }
