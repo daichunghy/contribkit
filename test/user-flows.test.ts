@@ -101,4 +101,18 @@ describe("first-time CLI workflows", () => {
       await rm(temp, { recursive: true, force: true });
     }
   });
+  it("warns when --base HEAD omits committed work or --ref changes policy", async () => {
+    const repo = await stageFixture("pass-clean");
+    const headOnly = await run(["doctor", "--repo", repo, "--base", "HEAD"]);
+    expect(headOnly.stdout).toMatch(/HEAD omits commits/);
+    const check = await run(["check", "--repo", repo, "--base", "HEAD"]);
+    expect(check.stdout).toMatch(/HEAD excludes commits/);
+    const sha = (await execFile("git", ["rev-parse", "HEAD"], { cwd: repo })).stdout.trim();
+    await writeFile(join(repo, "new.txt"), "change\n");
+    await execFile("git", ["add", "-A"], { cwd: repo });
+    await execFile("git", ["commit", "-m", "change"], { cwd: repo });
+    const refOverride = await run(["check", "--repo", repo, "--base", sha, "--ref", "HEAD"]);
+    expect(refOverride.stdout).toMatch(/overrides the review baseline policy/);
+  });
+
 });
