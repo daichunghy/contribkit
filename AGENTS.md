@@ -7,7 +7,8 @@ contribkit is a deterministic contribution preflight. Do not put an LLM in `comp
 ```sh
 npm install
 npm run verify
-npx contribkit preflight --repo . --base HEAD
+node dist/src/cli.js doctor --repo . --base HEAD
+node dist/src/cli.js check --repo . --base HEAD
 ```
 
 The latest documented release is `contribkit@0.1.0-alpha.7`. Release metadata in this
@@ -27,3 +28,7 @@ plugin catalog or Claude-for-OSS eligibility.
 - `--repo` must be a git clone root. Do not walk up to a parent repository.
 - Locale-free sorts (code-unit comparator). `evaluatedAt` and `overridden` sit outside the digested receipt body.
 - Follow [docs/agent-verification-map.md](docs/agent-verification-map.md) and [docs/agent-evaluation-protocol.md](docs/agent-evaluation-protocol.md) for bounded agent work, acceptance commands and evidence labels.
+
+## UX contract
+
+Use docs/PRODUCT_EXPERIENCE.md and docs/first-use.md to preserve the contributor, maintainer and automation paths. Never let a missing base silently fall back to HEAD. Keep the published npm alpha separate from source-only commands.

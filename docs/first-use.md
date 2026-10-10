@@ -1,78 +1,134 @@
-# First use: preflight a change before opening its pull request
+# First use without false green checks
 
-contribkit is useful when it catches a missing contribution requirement before
-the pull request exists. The first result should be a receipt that says
-`pass`, `blocked`, or `needs-human` and explains the next action.
+This guide walks through one real contribution. Everything remains local and
+offline. ContribKit does **not** open a pull request, and running the target's
+tests is a separate opt-in.
 
-## Clean-clone check
+## 1. Choose the correct version
 
-The published alpha.7 quickstart recorded in the README is:
+The npm release \`0.1.0-alpha.7\` contains the earlier \`preflight\` command.
+Until another release is verified and published, use the current GitHub source
+for \`doctor\`, \`check\`, and \`--strict\`:
 
-```sh
-npx contribkit@0.1.0-alpha.7 preflight --repo . --base HEAD
-```
-
-The source-clone path below remains the reproducible maintainer path.
-
-For a reproducible source checkout, regardless of registry state:
-
-```sh
-git clone --branch v0.1.0-alpha.7 https://github.com/daichunghy/contribkit.git
+\`\`\`sh
+git clone https://github.com/daichunghy/contribkit.git
 cd contribkit
 npm ci
-npm run first-use
-```
+npm run verify
+\`\`\`
 
-Then run the copy-paste smoke against a real local repository before opening a
-pull request. It keeps the receipt and always explains it, including when the
-preflight result is blocked:
+The resulting \`dist/src/cli.js\` is the ContribKit executable.
 
-```sh
-cd /path/to/target-repo
-node /path/to/contribkit/scripts/first-use-smoke.mjs \
-  --repo . \
-  --base HEAD \
-  --body-file /tmp/pr-body.md \
-  --out /tmp/contribkit-receipt.json
-```
+## 2. Go to the repository you actually want to contribute to
 
-The helper resolves `--repo .` from the directory where you invoke it, so the
-target can be the current repository. Replace the two `/path/to/...` values
-with absolute paths on your machine.
+\`\`\`sh
+cd /path/to/your-project
+git fetch origin
+node /path/to/contribkit/dist/src/cli.js doctor
+\`\`\`
 
-Select a trusted `--base` such as `origin/main` for non-empty changes; by
-default the preflight compiles policy from that revision, not from your edited
-working tree. Use `HEAD` for the clean-clone smoke check only.
+If your clone has \`origin/HEAD\`, \`origin/main\` or \`origin/master\`,
+ContribKit selects that remote-tracking ref and reports changed-file and
+contract-rule counts. This is **setup readiness**, not approval.
 
-The helper returns the original preflight exit code after `explain` completes:
-`0` for `pass` or `needs-human`, and `1` for `blocked`. Do not chain the
-preflight and explain commands with `&&`, because a blocked preflight is the
-useful receipt you need to inspect. `--run-tests` is opt-in and only accepts the
-documented allowlisted command families. The default path does not execute
-target-repository code. `--run-tests` runs every distinct allowlisted
-test requirement sequentially, up to a safety cap of 16 commands. Those
-runners still execute target-repository code and must be trusted separately.
+If the command reports no trusted base, choose the appropriate ref explicitly:
 
-For a direct CLI invocation, the equivalent two-step form is:
+\`\`\`sh
+node /path/to/contribkit/dist/src/cli.js doctor --base origin/develop
+\`\`\`
 
-```sh
-node dist/src/cli.js preflight --repo /path/to/target-repo --base HEAD \
-  --body-file /tmp/pr-body.md --out /tmp/contribkit-receipt.json
-node dist/src/cli.js explain /tmp/contribkit-receipt.json
-```
+Avoid \`--base HEAD\` on a feature branch: it omits changes already committed
+to that branch. Use \`HEAD\` only when you deliberately want to check
+uncommitted local work or demonstrate the clean-clone smoke.
 
-The first command may return exit code `1`; continue to the second command to
-see the actionable findings.
+## 3. Write a realistic PR body and check it
 
-## What to report
+Create \`/tmp/my-pr.md\` with the issue reference, change summary and
+checklist required by the target repository.
 
-Record the version, target repository type, time to the first result, the first
-confusing requirement, and whether the receipt changed what you did next. Use
-the [first-use feedback form](https://github.com/daichunghy/contribkit/issues/new?template=first-use.yml)
-without including private repository content or credentials.
+\`\`\`sh
+node /path/to/contribkit/dist/src/cli.js check --base origin/main \
+  --body-file /tmp/my-pr.md --out /tmp/contribkit-receipt.json
+\`\`\`
 
-This walkthrough proves the CLI path can be run. It does not prove plugin
-catalog listing, Claude-for-OSS eligibility, or adoption.
+Interpret the printed result:
 
-For package release, consumer updates, and rollback, see
-[release-and-rollback.md](release-and-rollback.md).
+- \`pass\`: there are no unresolved mandatory or human-decision findings.
+- \`blocked\`: correct each listed blocker and rerun.
+- \`needs-human\`: consult the maintainer about the listed decision; no
+  approval is implied.
+- \`advisory\`: nonblocking guidance that still deserves attention.
+
+\`--out\` writes a receipt regardless of whether the status is blocked.
+The human-readable next steps appear in the console. Keep receipts **outside
+the target Git working tree** so the report does not accidentally count itself
+as a new file.
+
+\`\`\`sh
+node /path/to/contribkit/dist/src/cli.js explain /tmp/contribkit-receipt.json
+\`\`\`
+
+The receipt body digest is checked when explaining it. This catches accidental
+changes to the receipt but is **not authentication**; a malicious writer can
+recalculate an unkeyed digest.
+
+## 4. Optional test evidence
+
+\`\`\`sh
+node /path/to/contribkit/dist/src/cli.js check --base origin/main \
+  --body-file /tmp/my-pr.md --run-tests
+\`\`\`
+
+ContribKit only runs the exact allowlisted test argv indicated by the
+base-revision contract. It runs up to 16 distinct commands sequentially and
+records their exit status. It does **not** execute arbitrary target shell
+commands and does not run any tests without \`--run-tests\`.
+
+Even an allowed test runner can execute arbitrary code from your repository.
+Only use this option in a clone you are willing to execute.
+
+## 5. Automation
+
+\`\`\`sh
+node /path/to/contribkit/dist/src/cli.js check --base origin/main \
+  --body-file /tmp/my-pr.md --strict --json --out /tmp/receipt.json
+\`\`\`
+
+Exit codes are 0 for pass, 1 for blocked and 2 for invalid arguments or
+configuration. By default needs-human also exits 0, preserving historical
+compatibility; \`--strict\` makes needs-human exit 3 so it cannot be silently
+mistaken for approval in CI. Machine-readable JSON stays on stdout.
+
+## If you are a maintainer
+
+Add a \`contribkit.yml\` file on the **base branch** and commit it there.
+For example:
+
+\`\`\`yaml
+schema: contribkit.policy.v1
+requireIssue: true
+prCheckboxes: required
+maxFiles: 20
+maxDiffLines: 400
+blockAdapters:
+  - rust-cargo
+\`\`\`
+
+The bundled Rust adapter becomes blocking only when a Cargo project matches.
+Unrecognized adapter names are reported to a human instead of silently
+ignored. Adapter code and manifests inside the **target** repository are
+never loaded by ContribKit.
+
+Read [adapter authoring](ADAPTER_AUTHORING.md) and
+[the threat model](THREAT_MODEL.md) before changing the compiler.
+
+## Feedback and product acceptance
+
+During a real first-use session, record (without private data): how quickly
+the user could find a trusted base, whether they understood the first result,
+how many commands they had to consult the docs for, and whether the printed
+remediation was actionable. File concrete issues using
+[the first-use feedback form](https://github.com/daichunghy/contribkit/issues/new?template=first-use.yml).
+
+Source-repo CI is internal evidence, not external adoption. An external pilot
+or production-ready claim requires separate verified records.
