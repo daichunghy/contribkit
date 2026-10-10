@@ -40,6 +40,16 @@ node /path/to/contribkit/dist/src/cli.js doctor --base origin/develop
 If this is a fork and you have both `origin` and `upstream`, ContribKit
 will not guess the target policy. Fetch `upstream` and explicitly choose
 `--base upstream/main` (or your project's actual target branch).
+If your fork has only an `origin` remote, set up the target repository as
+`upstream` first. ContribKit cannot verify remote ownership offline:
+
+```sh
+git remote add upstream https://github.com/PROJECT_OWNER/TARGET_REPO.git
+git fetch upstream
+node /path/to/contribkit/dist/src/cli.js doctor --base upstream/main
+```
+
+Verify the URL before running these commands.
 
 Avoid `--base HEAD` on a feature branch: it omits changes already committed
 to that branch. Use `HEAD` only when you deliberately want to check
