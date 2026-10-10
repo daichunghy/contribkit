@@ -17,10 +17,11 @@ function usage() {
     "",
     "Options:",
     "  --repo <path>         Target git clone root (default: .)",
-    "  --base <git-ref>      Base ref for the diff (default: HEAD)",
+    "  --base <git-ref>      Trusted ref (default: auto-discover origin/*)",
     "  --body-file <path>    Draft pull-request body",
     "  --out <path>          Receipt path (default: a unique file in /tmp)",
-    "  --run-tests           Opt in to the CLI's allowlisted target test command",
+    "  --run-tests           Opt in to allowlisted test commands",
+    "  --strict              Return exit 3 for needs-human",
     "  --help                Show this help",
   ].join("\n");
 }
@@ -36,15 +37,19 @@ function valueFor(argv, index, name) {
 function parseArgs(argv) {
   const options = {
     repo: ".",
-    base: "HEAD",
     out: join(tmpdir(), `contribkit-first-use-${process.pid}.json`),
     runTests: false,
+    strict: false,
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--help") return { help: true, options };
     if (arg === "--run-tests") {
       options.runTests = true;
+      continue;
+    }
+    if (arg === "--strict") {
+      options.strict = true;
       continue;
     }
     if (arg === "--repo") {
@@ -106,15 +111,17 @@ function main() {
   const invocationCwd = process.cwd();
   const repo = resolve(invocationCwd, options.repo);
   const out = resolve(invocationCwd, options.out);
-  const preflightArgs = ["preflight", "--repo", repo, "--base", options.base, "--out", out];
+  const preflightArgs = ["check", "--repo", repo, "--out", out];
+  if (options.base !== undefined) preflightArgs.push("--base", options.base);
   if (options.bodyFile !== undefined) {
     preflightArgs.push("--body-file", resolve(invocationCwd, options.bodyFile));
   }
   if (options.runTests) preflightArgs.push("--run-tests");
+  if (options.strict) preflightArgs.push("--strict");
 
   console.log(`receipt: ${out}`);
   const preflightStatus = runCli(preflightArgs);
-  if (preflightStatus !== 0 && preflightStatus !== 1) return preflightStatus;
+  if (![0, 1, 3].includes(preflightStatus)) return preflightStatus;
   if (!existsSync(out)) {
     console.error(`preflight did not write ${out}`);
     return 2;

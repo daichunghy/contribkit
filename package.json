@@ -54,7 +54,12 @@
     "README.md",
     "LICENSE",
     "docs/CHANGELOG.md",
-    "docs/THREAT_MODEL.md"
+    "docs/THREAT_MODEL.md",
+    "docs/first-use.md",
+    "docs/PRODUCT_EXPERIENCE.md",
+    "docs/ARCHITECTURE.md",
+    "docs/PRODUCT_SPEC.md",
+    "docs/ADAPTER_AUTHORING.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",

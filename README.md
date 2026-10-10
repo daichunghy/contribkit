@@ -1,147 +1,193 @@
-# contribkit
+# ContribKit
 
-**Do not open the pull request until the repository's contribution contract is satisfied.**
+[![npm release](https://img.shields.io/npm/v/contribkit.svg)](https://www.npmjs.com/package/contribkit) [![CI](https://github.com/daichunghy/contribkit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/daichunghy/contribkit/actions/workflows/ci.yml)
 
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![npm](https://img.shields.io/npm/v/contribkit.svg)](https://www.npmjs.com/package/contribkit)
-[![CI](https://github.com/daichunghy/contribkit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/daichunghy/contribkit/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/daichunghy/contribkit/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/daichunghy/contribkit/actions/workflows/codeql.yml)
+**Know what your repository expects before opening a pull request.**
 
-contribkit checks a repository's contribution rules before an agent or human opens a pull request. It reads explicit repo artifacts (`CONTRIBUTING`, PR templates, `CODEOWNERS`, and optional `contribkit.yml`), compiles them into a deterministic contract, and evaluates the local diff.
+ContribKit is a local, deterministic contribution preflight. It checks the
+repository's contribution guidance, PR template, CODEOWNERS, and optional
+policy against your actual Git changes. Instead of an unexplained green check,
+it gives you a **pass**, **blocked**, or **needs-human** receipt with next steps.
 
-This is **not** contributor-image generation ([LizardByte/contribkit](https://github.com/LizardByte/contribkit)), not a contribution-proposal bot ([vidiyala99/contribkit](https://github.com/vidiyala99/contribkit)), and not a GitHub merge gate ([PatchGate](https://github.com/daichunghy/patchgate)).
+It is not a test framework, an AI code reviewer, a GitHub merge gate, or a
+guarantee that code is correct. It never contacts a model provider or opens a
+pull request for you.
 
-**Live status (2026-09-06):** 0 GitHub stars, 0 forks, and no verified external consumer or
-pilot. `0.1.0-alpha.7` is on GitHub main and npm: the `alpha` and `latest` dist-tags both
-resolve `0.1.0-alpha.7`, and the `v0.1.0-alpha.7` tag matches the published tarball. Not in
-the Anthropic community plugin catalog. Not a Claude-for-OSS eligibility claim.
+[License (Apache-2.0)](LICENSE) ·
+[CI](https://github.com/daichunghy/contribkit/actions/workflows/ci.yml) ·
+[CodeQL](https://github.com/daichunghy/contribkit/actions/workflows/codeql.yml) ·
+[First-use guide](docs/first-use.md) ·
+[Product experience contract](docs/PRODUCT_EXPERIENCE.md)
 
-> If one preflight run saved you a rejected pull request,
-> [star it](https://github.com/daichunghy/contribkit/stargazers). That is the
-> only growth signal this repo tracks.
+## Start in two steps
 
-The fastest first result on the current repository is:
+**Important release distinction:** the published npm
+`contribkit@0.1.0-alpha.7` is an earlier alpha. The commands
+`doctor`, `check`, and `--strict` documented below are on the
+**current source branch** until a new npm release is verified and published.
+
+Build the current source checkout:
 
 ```sh
-npx contribkit@0.1.0-alpha.7 preflight --repo . --base HEAD
-```
-
-Read the receipt before opening a pull request; the next action is explicit
-when the result is `blocked` or `needs-human`.
-
-```sh
-git clone --branch v0.1.0-alpha.7 https://github.com/daichunghy/contribkit.git
+git clone https://github.com/daichunghy/contribkit.git
 cd contribkit
 npm ci
 npm run verify
-node dist/src/cli.js preflight --repo . --base HEAD
 ```
 
-A clean clone against `HEAD` should print `contribkit pass`. There is no pull request yet, so missing `npm test` records and empty PR checkboxes are not blockers.
-
-For the first result on another repository, use the [first-use walkthrough](docs/first-use.md).
-
-When you have local changes, record tests (opt-in) or the receipt stays `blocked` until a passing allowlisted command is recorded:
+Run against an **existing local Git clone**. Replace the placeholder path with
+the actual clone you want to contribute to:
 
 ```sh
-node dist/src/cli.js preflight --repo . --base HEAD --run-tests
-node dist/src/cli.js preflight --repo . --base HEAD --body-file /tmp/pr.md --out /tmp/receipt.json
-node dist/src/cli.js explain /tmp/receipt.json
+node /path/to/contribkit/dist/src/cli.js doctor --repo /path/to/target
+node /path/to/contribkit/dist/src/cli.js check --repo /path/to/target \
+  --body-file /path/to/pr-body.md
 ```
 
-Library:
+If you installed a future version that contains this CLI, use
+`contribkit doctor` and `contribkit check` directly. No policy file is
+required to run the basic checks.
 
-```ts
-import { compile, evaluate } from "contribkit";
-```
+### Understanding the result
 
-Claude Code plugin (local marketplace, not the Anthropic catalog):
+| Result | Meaning | What to do |
+| --- | --- | --- |
+| `pass` | All **blocking** and human-decision checks passed | You may continue preparing your PR; code quality still needs review |
+| `blocked` | At least one mandatory condition failed | Fix the listed item, then rerun |
+| `needs-human` | An unresolved decision requires human attention | Ask a maintainer to review the indicated paths or policy |
+Advisory findings are shown within any of the three results above. They do not constitute a separate receipt status and do not block the PR by themselves.
 
-```
-/plugin marketplace add daichunghy/contribkit
-/plugin install contribkit@daichunghy
-```
-
-`--json` prints machine-readable contract or receipt JSON. Preflight exit codes: `blocked` → 1; `pass` and `needs-human` → 0. `--repo` must be a git clone root, not a nested folder of another repository.
-
-`--run-tests` is opt-in. It only executes exact allowlisted argv (`npm test`, `npm run test`, `pnpm test`, `yarn test`, `pytest`, `python -m pytest`, `cargo test`, `go test`, `dotnet test`, `ctest`, `phpunit`, `rspec`, `bun test`, `deno test`, `swift test`, `mix test`, `mvn test`). Extra arguments, pipes, `&&`, and `$()` are rejected. Default preflight only *records* commands already supplied; it does not run the target repository.
-
-`CONTRIBKIT_ALLOW=1` sets `receipt.overridden = true`. It does not rewrite tool argv.
-
-## Preflight trust and execution model
-
-ContribKit protects the **contribution rules at the selected Git base**. A contributor
-changing `contribkit.yml`, `CODEOWNERS` or `CONTRIBUTING.md` in their own branch
-cannot weaken the checks for that same contribution. Use `--base` to select the
-trusted baseline, usually the maintained upstream main branch. To deliberately
-audit a different policy revision, use the advanced `--ref` option and verify
-that revision with the maintainer first.
+A clean tree relative to `HEAD` is **not** proof that your branch is ready.
+That command only checks uncommitted work. ContribKit therefore selects the
+local `origin/HEAD`, `origin/main` or `origin/master` remote-tracking
+baseline by default, and **fails with instructions** when none is available.
+You can select a different trusted baseline explicitly:
 
 ```sh
-contribkit preflight --repo . --base origin/main --body-file ./pr-body.md
-contribkit preflight --repo . --base origin/main --run-tests --out ./receipt.json
-contribkit explain ./receipt.json
+git fetch origin
+node /path/to/contribkit/dist/src/cli.js check --repo . --base origin/develop \
+  --body "Fixes #123"
 ```
 
-`--run-tests` executes each distinct **exactly allowlisted** command from the
-contract sequentially (at most 16). It never executes anything by default.
-Allowlisting argv prevents shell injection, but test runners such as
-`npm test` can still execute code belonging to the target repository.
-Only opt in for code you are prepared to execute. A reported test claim does
-not satisfy the executed-test evidence rule.
+In a fork with both `origin` (your fork) and `upstream` (target project),
+ContribKit deliberately refuses to guess. Fetch the project remote and use
+`--base upstream/main` or the actual target branch. Claude hooks can use
+`CONTRIBKIT_BASE_REF=upstream/main` for the same situation. If only `origin`
+is configured and it points to your fork, ContribKit cannot detect that
+without contacting GitHub; add the true project as `upstream` and select it.
 
-The packaged MCP server uses **newline-delimited JSON-RPC over stdio** with
-a 1 MB input-frame limit. It currently supports the legacy initialize
-handshake (2024-11-05 and 2025-11-25), not the newer stateless MCP variant.
+Remote-tracking refs are only as current as your latest fetch. The trust
+decision for `--base` belongs to you and your repository maintainer.
 
-### Development branch versus npm
+## Three levels, one deterministic engine
 
-Fixes under review in [PR #58](https://github.com/daichunghy/contribkit/pull/58)
-are **not part of the published `0.1.0-alpha.7` npm package**. Install
-and test this source branch only if you need those unreleased fixes; do not
-describe them as published functionality.
+### 1. Contributor (zero configuration)
 
-## What is shipped
+`doctor` explains whether this clone has a usable review baseline and shows
+the number of changed files and available checks. `check` runs the actual
+contribution preflight. A PR draft can be passed with `--body` or
+`--body-file`, which helps check issue links and checklist requirements.
 
-- Deterministic `compile` + `evaluate` (no LLM, no network in the hot path)
-- CLI: `compile` / `preflight` / `explain` / `mcp`
-- Extractors 1–10 (license, PR checkboxes, issue link, CODEOWNERS, size, workflow paths, recorded tests, AI disclosure, DCO, `contribkit.yml`)
-- Golden fixtures under `fixtures/repos/`
-- Claude plugin: `.claude-plugin/plugin.json`, `skills/*`, `hooks/hooks.json` (Bash|PowerShell `gh`/`glab` **and** `mcp__.*__create_pull_request`)
-- MCP stdio: `node dist/src/cli.js mcp` tools `compile_contract`, `preflight_diff`, `explain_receipt`
-- Bundled adapters: `python-pytest`, `node-npm-test`, `go-test`, `php-phpunit`, `ruby-rspec`, `rust-cargo`, `dotnet-test`, `cmake-ctest`, `bun-test`, `deno-test`, `swift-test`, `elixir-mix`, `java-maven` (advisory `command_recorded` only unless `blockAdapters`)
-- Adapter authoring guide: [docs/ADAPTER_AUTHORING.md](docs/ADAPTER_AUTHORING.md)
+The command **does not run tests by default**. To explicitly execute every
+distinct allowlisted test command mentioned in the compiled contract:
 
-## What is not shipped
+```sh
+contribkit check --base origin/main --body-file pr.md --run-tests
+```
 
-- Anthropic community plugin catalog listing
-- GitHub Action merge gate (that is PatchGate's lane)
-- A `v0.1.0` stable claim — this tag is alpha
+**Warning:** even an allowlisted `npm test` or `cargo test` runs code from
+the target repository. Only opt in when you trust that code. The runner never
+evaluates arbitrary shell pipelines or target-defined command strings.
 
-It does **not** decide whether code is correct, written by AI, or merge-worthy.
+### 2. Maintainer (precise, versioned rules)
 
-## Who this is for
+ContribKit reads `CONTRIBUTING.md`,
+`.github/PULL_REQUEST_TEMPLATE.md`, `.github/CODEOWNERS` and optional
+`contribkit.yml`. Add an explicit policy **on your trusted base branch**
+before relying on it for new contributions:
 
-- Contributors, and the coding agents acting for them, who want the repository
-  contract satisfied before a pull request is opened.
-- Maintainers tired of repeating "read CONTRIBUTING" on first contributions.
-- Not a fit if you want a GitHub merge gate — that is
-  [PatchGate](https://github.com/daichunghy/patchgate)'s lane — or contributor
-  images.
+```yaml
+schema: contribkit.policy.v1
+requireIssue: true
+maxFiles: 20
+maxDiffLines: 400
+prCheckboxes: required
+license: required
+blockAdapters:
+  - node-npm-test
+```
 
-If one preflight run saved you a rejected pull request, star the repository. It
-helps other contributors find the check.
+An adapter is advisory by default; `blockAdapters` selects which ones become
+mandatory. Typos in adapter IDs are reported as `needs-human`. Contributors
+cannot weaken the rules for their own PR simply by changing `contribkit.yml`
+or CODEOWNERS in the proposed branch: by default the rules come from the
+selected base revision.
 
-Release history: [CHANGELOG.md](CHANGELOG.md).
+Use `contribkit compile --repo . --ref origin/main --json` to inspect the
+exact machine-readable contract. [Adapter guide](docs/ADAPTER_AUTHORING.md).
 
-## Security
+### 3. Automation and AI agents (explicit boundaries)
 
-See [SECURITY.md](.github/SECURITY.md) and [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).
+```sh
+contribkit check --base origin/main --body-file pr.md --strict --json \
+  --out receipt.json
+contribkit explain receipt.json
+```
 
-Agent-assisted work follows the [verification map](docs/agent-verification-map.md) and the [evaluation protocol](docs/agent-evaluation-protocol.md). Run `npm run agent-eval -- CK-01` for a manifest-backed local acceptance task.
+`--strict` treats `needs-human` as exit code **3** for automation.
+Default exit codes are 0 (pass or needs-human), 1 (blocked) and 2
+(command or configuration error); strict mode adds 3 (needs-human).
+JSON receipts retain an independently checkable digest of their body; the
+digest is not a signature or a proof of where the data came from.
 
-The current local evidence is recorded in the [agent scaling checkpoint](docs/agent-scaling-checkpoint.md).
+The optional Claude Code plugin intercepts recognized PR-creation tools
+(`gh pr create`, `glab mr create`, supported GitHub MCP calls); unrelated
+shell commands are not subject to the PR preflight hook. The hook prevents PR
+creation on `blocked` **or** `needs-human` unless the user explicitly sets
+`CONTRIBKIT_ALLOW=1`. GitLab CLI uses `--description` and `--target-branch`,
+not GitHub's `--body` and `--base` flags. The local MCP stdio
+server exposes `compile_contract`, `preflight_diff`, and
+`explain_receipt`, all without opening PRs.
 
-## License
+```sh
+node dist/src/cli.js mcp
+```
 
-Apache-2.0. See [LICENSE](LICENSE).
+The MCP transport is newline-delimited JSON-RPC with a bounded input frame
+and the documented legacy initialize handshake. The hook and MCP integration
+do **not** confer GitHub approval, merge permission or code-safety guarantees.
+
+## What's included
+
+- Local CLI, TypeScript library, Claude Code plugin and MCP stdio tools
+- Versioned contracts and receipts with stable canonical digests
+- Rule extraction for issue references, PR checklist, DCO, license,
+  changed-file limits, CODEOWNERS and workflow-sensitive files
+- 13 bundled ecosystem adapters covering npm, pytest, Cargo, Maven, Swift,
+  Go, PHP, Ruby, CMake, .NET, Bun, Deno and Elixir Mix
+- Opt-in command execution with an exact argv allowlist, bounded output and
+  test exit-code provenance
+- Golden fixtures, CI on Node 22 and Node 24, CodeQL, clean-room package smoke
+
+See the [full usage guide](docs/first-use.md) and
+[architecture](docs/ARCHITECTURE.md).
+
+## Still not production-validated
+
+ContribKit is a **public alpha**. No independent external adopter or pilot
+is verified. CI success is not a substitute for checking behavior with real
+contributors, forks, Windows/macOS shells, private-repo restrictions, or
+different Git hosting conventions. GitHub merge protection and true approval
+remain the maintainer's responsibility.
+
+It is distinct from
+[PatchGate](https://github.com/daichunghy/patchgate) (post-PR readiness
+checks), [LizardByte/contribkit](https://github.com/LizardByte/contribkit)
+(contributor images), and [vidiyala99/contribkit](https://github.com/vidiyala99/contribkit)
+(contribution proposals).
+
+See [SECURITY.md](.github/SECURITY.md),
+[threat model](docs/THREAT_MODEL.md),
+[release and rollback](docs/release-and-rollback.md), and [CHANGELOG](CHANGELOG.md).
+
+Licensed under Apache-2.0.

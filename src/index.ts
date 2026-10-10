@@ -1,3 +1,6 @@
+export { verifyReceiptDigest } from "./receipt.js";
+export { resolveTrustedBase } from "./base.js";
+export type { TrustedBase } from "./base.js";
 export { compile } from "./compile.js";
 export { evaluate, receiptBodyOf } from "./evaluate.js";
 export { preflight } from "./preflight.js";

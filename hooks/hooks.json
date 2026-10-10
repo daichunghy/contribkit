@@ -7,22 +7,22 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Bash(gh pr create *)",
+            "if": "Bash(gh pr create*)",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/src/hook.js\""
           },
           {
             "type": "command",
-            "if": "Bash(glab mr create *)",
+            "if": "Bash(glab mr create*)",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/src/hook.js\""
           },
           {
             "type": "command",
-            "if": "PowerShell(gh pr create *)",
+            "if": "PowerShell(gh pr create*)",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/src/hook.js\""
           },
           {
             "type": "command",
-            "if": "PowerShell(glab mr create *)",
+            "if": "PowerShell(glab mr create*)",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/src/hook.js\""
           }
         ]

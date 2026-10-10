@@ -1,16 +1,24 @@
 #!/usr/bin/env node
 /**
- * Claude Code PreToolUse handler. Deny PR-create tools when preflight is blocked
- * and CONTRIBKIT_ALLOW is unset. Does not rewrite argv.
+ * Claude Code PreToolUse: guard PR creation, never ordinary shell commands.
+ * Does not rewrite argv or approve a tool call.
  */
+import { readFile, stat } from "node:fs/promises";
+import { isAbsolute, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { resolvePrBaseRef, resolveTrustedBase } from "./base.js";
+import { classifyHookInput } from "./hook-input.js";
 import { preflight } from "./preflight.js";
-import { git } from "./repo.js";
 import { isRecord } from "./types.js";
 
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
+  let length = 0;
   for await (const chunk of process.stdin) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
+    const next = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
+    length += next.length;
+    if (length > 1_000_000) throw new Error("hook JSON input exceeds 1 MB");
+    chunks.push(next);
   }
   return Buffer.concat(chunks).toString("utf8");
 }
@@ -23,75 +31,78 @@ function deny(reason: string): void {
       permissionDecisionReason: reason,
     },
   };
-  process.stdout.write(`${JSON.stringify(payload)}\n`);
+  process.stdout.write(JSON.stringify(payload) + "\n");
+}
+
+async function readPrBodyFile(file: string, cwd: string): Promise<string> {
+  if (file === "-") throw new Error("body file '-' (stdin) is not supported by the hook; supply --body or a readable file");
+  const candidate = isAbsolute(file) ? file : resolve(cwd, file);
+  const info = await stat(candidate);
+  if (!info.isFile() || info.size > 1_000_000) throw new Error("PR body file must be a text file <= 1 MB");
+  return await readFile(candidate, "utf8");
+}
+
+/**
+ * Exported for in-process fixture tests. Unknown inputs deny; unrelated tools
+ * pass without checking the repository or invoking Git.
+ */
+export async function handleHookEvent(
+  payload: unknown,
+  options: { cwd: string; env: NodeJS.ProcessEnv },
+): Promise<string | undefined> {
+  const target = classifyHookInput(payload);
+  if (target.action === "ignore") return undefined;
+  if (target.action === "invalid") return target.reason;
+  const parsed = isRecord(payload) ? payload : {};
+  const cwd = typeof parsed.cwd === "string" && parsed.cwd.length > 0 ? parsed.cwd : options.cwd;
+  const explicitlyConfigured =
+    (typeof parsed.baseRef === "string" && parsed.baseRef) ||
+    (typeof parsed.base_ref === "string" && parsed.base_ref) ||
+    options.env.CONTRIBKIT_BASE_REF;
+  try {
+    const requested = explicitlyConfigured ??
+      (target.requestedBase !== undefined ? await resolvePrBaseRef(cwd, target.requestedBase) : undefined);
+    const base = await resolveTrustedBase(cwd, requested);
+    const body = target.body ??
+      (target.bodyFile !== undefined ? await readPrBodyFile(target.bodyFile, cwd) : undefined) ??
+      (typeof parsed.prBodyDraft === "string" ? parsed.prBodyDraft : undefined);
+    const allow = options.env.CONTRIBKIT_ALLOW === "1";
+    const { receipt } = await preflight({
+      repoPath: cwd,
+      baseRef: base.sha,
+      ...(body !== undefined ? { prBodyDraft: body } : {}),
+      overridden: allow,
+    });
+    if (receipt.status !== "pass" && !allow) {
+      const unresolved = receipt.findings.filter((item) => !item.passed && item.severity !== "advisory");
+      const steps = unresolved.map((item) => item.ruleId + ": " + item.message);
+      return steps.length > 0 ? steps.join("; ") :
+        "contribkit " + receipt.status + ": explicit maintainer review is still required";
+    }
+    return undefined;
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
 }
 
 async function main(): Promise<void> {
-  const raw = await readStdin();
-  let cwd = process.cwd();
-  let parsed: Record<string, unknown> | undefined;
-  if (raw.trim().length > 0) {
-    try {
-      const candidate: unknown = JSON.parse(raw);
-      if (isRecord(candidate)) {
-        parsed = candidate;
-      }
-      if (parsed && typeof parsed.cwd === "string" && parsed.cwd.length > 0) {
-        cwd = parsed.cwd;
-      }
-    } catch {
-      deny("contribkit hook could not parse its JSON input");
-      return;
-    }
+  try {
+    const raw = await readStdin();
+    const parsed: unknown = JSON.parse(raw);
+    const denial = await handleHookEvent(parsed, { cwd: process.cwd(), env: process.env });
+    if (denial !== undefined) deny(denial);
+  } catch (error) {
+    deny("contribkit hook error: " + (error instanceof Error ? error.message : String(error)));
   }
-
-  const requestedBase =
-    (parsed && typeof parsed.baseRef === "string" && parsed.baseRef) ||
-    (parsed && typeof parsed.base_ref === "string" && parsed.base_ref) ||
-    process.env.CONTRIBKIT_BASE_REF;
-  const candidates = [requestedBase, "origin/main", "origin/HEAD", "main", "HEAD~1"].filter(
-    (item): item is string => typeof item === "string" && item.length > 0,
-  );
-  let baseRef: string | undefined;
-  for (const candidate of candidates) {
-    const result = await git(cwd, ["rev-parse", "--verify", candidate]);
-    if (result.code === 0) {
-      baseRef = candidate;
-      break;
-    }
-  }
-  if (baseRef === undefined) {
-    deny("contribkit could not determine a trusted base ref; set CONTRIBKIT_BASE_REF");
-    return;
-  }
-
-  const nestedToolInput = parsed && isRecord(parsed.tool_input) ? parsed.tool_input : undefined;
-  const prBodyDraft =
-    (parsed && typeof parsed.prBodyDraft === "string" && parsed.prBodyDraft) ||
-    (parsed && typeof parsed.body === "string" && parsed.body) ||
-    (nestedToolInput && typeof nestedToolInput.body === "string" && nestedToolInput.body) ||
-    undefined;
-
-  const allow = process.env.CONTRIBKIT_ALLOW === "1";
-  const { receipt } = await preflight({
-    repoPath: cwd,
-    baseRef,
-    ...(prBodyDraft !== undefined ? { prBodyDraft } : {}),
-    overridden: allow,
-  });
-
-  if (receipt.status === "blocked" && !allow) {
-    const blockers = receipt.findings
-      .filter((item) => !item.passed && item.severity === "block")
-      .map((item) => `${item.ruleId}: ${item.message}`);
-    const reason = blockers.length > 0 ? blockers.join("; ") : "contribkit preflight blocked";
-    deny(reason);
-    return;
-  }
-  // Silent exit 0 does not approve the tool.
 }
 
-main().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  deny(`contribkit hook error: ${message}`);
-});
+function isDirectRun(): boolean {
+  const argv1 = process.argv[1];
+  return argv1 !== undefined && pathToFileURL(resolve(argv1)).href === import.meta.url;
+}
+
+if (isDirectRun()) {
+  main().catch((error: unknown) => {
+    deny("contribkit hook error: " + (error instanceof Error ? error.message : String(error)));
+  });
+}

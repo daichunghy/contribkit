@@ -1,21 +1,31 @@
 ---
 name: preflight
-description: Compile the target repository contribution contract and evaluate the local diff before opening a pull request.
+description: Check the target repository's trusted-base contribution contract before a pull request.
 ---
 
-# contribkit preflight
+# ContribKit preflight
 
-Do not open a pull request until this skill reports `pass` or the user explicitly sets `CONTRIBKIT_ALLOW=1`.
+Use the current source CLI (or a future published release with doctor/check).
+The currently published alpha.7 predates these commands.
 
-This plugin is not in the Anthropic community catalog. CLI:
+First diagnose the review base, then check the real diff:
 
 ```sh
-node dist/src/cli.js compile --repo . --out /tmp/contract.json
-node dist/src/cli.js preflight --repo . --base HEAD
+node dist/src/cli.js doctor --repo /path/to/target
+node dist/src/cli.js check --repo /path/to/target --body-file /tmp/pr.md
 ```
 
-A tree with no diff against `--base` should `pass`. `command_recorded` and PR-body checks apply only when there are local changes.
+If remote tracking refs are absent, specify a trusted `--base` explicitly.
+Do not use HEAD as a fallback just to obtain `pass`: HEAD omits committed
+branch changes. A clean diff is only a clean-tree check.
 
-`--run-tests` is opt-in and only runs allowlisted argv (`npm test`, `pytest`, `cargo test`, `go test`, …). Never execute commands copied from the target `CONTRIBUTING` file.
+Never execute tests unless the user explicitly approves `--run-tests`;
+even allowlisted test runners can execute target-repo code.
 
-If the receipt is `blocked`, fix the listed rule ids. `needs-human` means a person must review (for example CODEOWNERS or workflow files); it is not a merge approval.
+- `blocked`: fix blockers before PR creation, or require an explicit override.
+- `needs-human`: request human attention for protected files or unclear
+  policy; do not pretend there has already been an approval.
+- `pass`: repository contribution checks pass; this is not a merge or
+  code-safety approval.
+
+The Claude hook only guards PR creation; do not block unrelated shell work.
