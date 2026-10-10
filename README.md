@@ -1,5 +1,7 @@
 # ContribKit
 
+[![npm release](https://img.shields.io/npm/v/contribkit.svg)](https://www.npmjs.com/package/contribkit) [![CI](https://github.com/daichunghy/contribkit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/daichunghy/contribkit/actions/workflows/ci.yml)
+
 **Know what your repository expects before opening a pull request.**
 
 ContribKit is a local, deterministic contribution preflight. It checks the
