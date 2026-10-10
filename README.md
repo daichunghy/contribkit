@@ -72,7 +72,9 @@ node /path/to/contribkit/dist/src/cli.js check --repo . --base origin/develop \
 In a fork with both `origin` (your fork) and `upstream` (target project),
 ContribKit deliberately refuses to guess. Fetch the project remote and use
 `--base upstream/main` or the actual target branch. Claude hooks can use
-`CONTRIBKIT_BASE_REF=upstream/main` for the same situation.
+`CONTRIBKIT_BASE_REF=upstream/main` for the same situation. If only `origin`
+is configured and it points to your fork, ContribKit cannot detect that
+without contacting GitHub; add the true project as `upstream` and select it.
 
 Remote-tracking refs are only as current as your latest fetch. The trust
 decision for `--base` belongs to you and your repository maintainer.
