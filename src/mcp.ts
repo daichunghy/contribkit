@@ -140,15 +140,23 @@ export async function handleMcpMessage(message: unknown): Promise<Record<string,
   }
   const req = message as JsonRpcRequest;
   const id = req.id ?? null;
+  // JSON-RPC notifications never receive responses.
+  if (!Object.hasOwn(message, "id")) return undefined;
   if (req.method === "notifications/initialized" || req.method === "notifications/cancelled") {
     return undefined;
   }
+  // Legacy 2025-era MCP uses initialize; the 2026-07-28 stateless
+  // protocol is deliberately not advertised by this implementation.
   if (req.method === "initialize") {
+    const params = isRecord(req.params) ? req.params : {};
+    const protocolVersion = params.protocolVersion === "2024-11-05"
+      ? "2024-11-05"
+      : "2025-11-25";
     return {
       jsonrpc: "2.0",
       id,
       result: {
-        protocolVersion: "2024-11-05",
+        protocolVersion,
         capabilities: { tools: {} },
         serverInfo: { name: "contribkit", version: VERSION },
       },
@@ -173,46 +181,54 @@ export async function handleMcpMessage(message: unknown): Promise<Record<string,
   return { jsonrpc: "2.0", id, error: { code: -32601, message: `method not found: ${String(req.method)}` } };
 }
 
+/**
+ * MCP stdio frames are newline-delimited JSON-RPC messages (not HTTP
+ * Content-Length frames). Keep stdout protocol-only. Bound each input line
+ * before parsing so an untrusted client cannot grow the process indefinitely.
+ */
 export async function runMcpStdio(
   input: NodeJS.ReadableStream = process.stdin,
   output: NodeJS.WritableStream = process.stdout,
 ): Promise<void> {
+  const maxFrameBytes = 1_000_000;
   let buffer = Buffer.alloc(0);
-  for await (const chunk of input) {
-    buffer = Buffer.concat([buffer, Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk))]);
-    if (buffer.length > 4_000_000) {
-      throw new Error("MCP input exceeds the 4 MB frame buffer limit.");
+
+  function respond(response: Record<string, unknown>): void {
+    output.write(canonicalJson(response) + "\n");
+  }
+
+  async function handleFrame(raw: Buffer): Promise<void> {
+    const frame = raw.at(-1) === 13 ? raw.subarray(0, -1) : raw;
+    if (frame.length === 0) return;
+    if (frame.length > maxFrameBytes) {
+      throw new Error("MCP input exceeds the 1 MB line limit.");
     }
-    while (true) {
-      const headerEnd = buffer.indexOf("\r\n\r\n");
-      if (headerEnd === -1) break;
-      const header = buffer.subarray(0, headerEnd).toString("utf8");
-      const lengthMatch = /Content-Length:\s*(\d+)/i.exec(header);
-      if (lengthMatch === null || lengthMatch[1] === undefined) {
-        buffer = buffer.subarray(headerEnd + 4);
-        continue;
-      }
-      const length = Number.parseInt(lengthMatch[1], 10);
-      if (!Number.isSafeInteger(length) || length < 0 || length > 1_000_000) {
-        throw new Error("MCP Content-Length exceeds the 1 MB frame limit.");
-      }
-      const bodyStart = headerEnd + 4;
-      if (buffer.length < bodyStart + length) break;
-      const body = buffer.subarray(bodyStart, bodyStart + length).toString("utf8");
-      buffer = buffer.subarray(bodyStart + length);
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(body);
-      } catch {
-        continue;
-      }
-      const response = await handleMcpMessage(parsed);
-      if (response === undefined) continue;
-      const payload = Buffer.from(`${canonicalJson(response)}\n`, "utf8");
-      output.write(`Content-Length: ${payload.length}\r\n\r\n`);
-      output.write(payload);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(frame.toString("utf8"));
+    } catch {
+      respond({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "parse error" } });
+      return;
+    }
+    const response = await handleMcpMessage(parsed);
+    if (response !== undefined) respond(response);
+  }
+
+  for await (const chunk of input) {
+    const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
+    buffer = Buffer.concat([buffer, bytes]);
+    let newline: number;
+    while ((newline = buffer.indexOf(10)) !== -1) {
+      const frame = buffer.subarray(0, newline);
+      buffer = buffer.subarray(newline + 1);
+      await handleFrame(frame);
+    }
+    if (buffer.length > maxFrameBytes) {
+      throw new Error("MCP input exceeds the 1 MB line limit.");
     }
   }
+  // The stdio specification requires a terminal newline; ignore incomplete
+  // trailing data instead of processing an unframed request.
 }
 
 function isDirectRun(): boolean {
