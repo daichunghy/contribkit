@@ -61,7 +61,7 @@ Interpret the printed result:
 - `blocked`: correct each listed blocker and rerun.
 - `needs-human`: consult the maintainer about the listed decision; no
   approval is implied.
-- `advisory`: nonblocking guidance that still deserves attention.
+Advisory findings are listed inside the receipt but are not a fourth status. They do not block by themselves.
 
 `--out` writes a receipt regardless of whether the status is blocked.
 The human-readable next steps appear in the console. Keep receipts **outside
