@@ -48,11 +48,6 @@ function filteredLineCount(snapshot: EvaluationSnapshot, ignore: readonly string
   return snapshot.diffStat.insertions + snapshot.diffStat.deletions;
 }
 
-function lastCommit(snapshot: EvaluationSnapshot): string {
-  const last = snapshot.commitMessages[snapshot.commitMessages.length - 1];
-  return last ?? "";
-}
-
 function hasContribution(snapshot: EvaluationSnapshot, ignore?: readonly string[]): boolean {
   return filteredPaths(snapshot, ignore).length > 0;
 }
@@ -83,10 +78,14 @@ function checkPasses(rule: ContractRule, snapshot: EvaluationSnapshot): boolean 
     }
     case "path_owned": {
       const patterns = rule.patterns ?? (rule.glob !== undefined ? [rule.glob] : []);
-      const ignore = rule.ignore;
-      const changed = filteredPaths(snapshot, ignore);
-      if (patterns.length === 0) return true;
-      const synthetic = patterns.map((pattern, index) => ({
+      const changed = filteredPaths(snapshot, rule.ignore);
+      // Preserve order and ownerless last-match overrides from CODEOWNERS.
+      // Older contracts without codeownerRules retain their original behavior.
+      const synthetic = rule.codeownerRules?.map((entry, index) => ({
+        pattern: entry.pattern,
+        owners: entry.hasOwners ? ["@owners"] : [],
+        line: index + 1,
+      })) ?? patterns.map((pattern, index) => ({
         pattern,
         owners: ["@owners"],
         line: index + 1,
@@ -118,7 +117,10 @@ function checkPasses(rule: ContractRule, snapshot: EvaluationSnapshot): boolean 
     }
     case "commit_signed_off":
       if (!hasContribution(snapshot, rule.ignore)) return true;
-      return SIGNED_OFF.test(lastCommit(snapshot));
+      // DCO applies to every commit in the contribution range, not just HEAD.
+      // Uncommitted-only changes cannot inherit the base commit's sign-off.
+      return snapshot.commitMessages.length > 0 &&
+        snapshot.commitMessages.every((message) => SIGNED_OFF.test(message));
     default: {
       const _exhaustive: never = rule.check;
       return _exhaustive;

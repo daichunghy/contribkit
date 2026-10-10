@@ -68,6 +68,39 @@ Claude Code plugin (local marketplace, not the Anthropic catalog):
 
 `CONTRIBKIT_ALLOW=1` sets `receipt.overridden = true`. It does not rewrite tool argv.
 
+## Preflight trust and execution model
+
+ContribKit protects the **contribution rules at the selected Git base**. A contributor
+changing `contribkit.yml`, `CODEOWNERS` or `CONTRIBUTING.md` in their own branch
+cannot weaken the checks for that same contribution. Use `--base` to select the
+trusted baseline, usually the maintained upstream main branch. To deliberately
+audit a different policy revision, use the advanced `--ref` option and verify
+that revision with the maintainer first.
+
+```sh
+contribkit preflight --repo . --base origin/main --body-file ./pr-body.md
+contribkit preflight --repo . --base origin/main --run-tests --out ./receipt.json
+contribkit explain ./receipt.json
+```
+
+`--run-tests` executes each distinct **exactly allowlisted** command from the
+contract sequentially (at most 16). It never executes anything by default.
+Allowlisting argv prevents shell injection, but test runners such as
+`npm test` can still execute code belonging to the target repository.
+Only opt in for code you are prepared to execute. A reported test claim does
+not satisfy the executed-test evidence rule.
+
+The packaged MCP server uses **newline-delimited JSON-RPC over stdio** with
+a 1 MB input-frame limit. It currently supports the legacy initialize
+handshake (2024-11-05 and 2025-11-25), not the newer stateless MCP variant.
+
+### Development branch versus npm
+
+Fixes under review in [PR #58](https://github.com/daichunghy/contribkit/pull/58)
+are **not part of the published `0.1.0-alpha.7` npm package**. Install
+and test this source branch only if you need those unreleased fixes; do not
+describe them as published functionality.
+
 ## What is shipped
 
 - Deterministic `compile` + `evaluate` (no LLM, no network in the hot path)

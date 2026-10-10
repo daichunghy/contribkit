@@ -20,7 +20,7 @@ import { assertContract } from "./schema.js";
 import { isRecord, type ContractRule, type ContractSource, type ContributionContract } from "./types.js";
 import type { ContribPolicy, Severity } from "./types.js";
 import { SCHEMA_CONTRACT } from "./version.js";
-import { adapterRules } from "./adapters.js";
+import { adapterRules, loadBundledAdapters } from "./adapters.js";
 
 const DEFAULT_MAX_FILES = 20;
 const DEFAULT_MAX_DIFF_LINES = 400;
@@ -132,6 +132,7 @@ function makeRule(
   if (base.glob !== undefined) rule.glob = base.glob;
   if (base.ignore !== undefined) rule.ignore = base.ignore;
   if (base.patterns !== undefined) rule.patterns = base.patterns;
+  if (base.codeownerRules !== undefined) rule.codeownerRules = base.codeownerRules;
   if (base.keys !== undefined) rule.keys = base.keys;
   return rule;
 }
@@ -207,6 +208,21 @@ export async function compile(options: CompileOptions): Promise<ContributionCont
     }
   }
 
+  // A misspelled adapter ID must not silently disable an intended blocking test.
+  if (policy?.blockAdapters) {
+    const bundled = new Set(loadBundledAdapters().map((adapter) => adapter.id));
+    const missing = policy.blockAdapters.filter((id) => !bundled.has(id));
+    if (missing.length > 0) {
+      compiled.push(makeRule({
+        id: "policy-unknown-adapters",
+        severity: "needs-human",
+        origin: policyFile?.path ?? "contribkit.yml",
+        check: "unknown_check",
+        message: "Unknown blockAdapters IDs: " + missing.join(", ") + ". Check bundled adapter names.",
+      }));
+    }
+  }
+
   const ignore = policy?.ignorePaths;
 
   // 1. License present
@@ -279,6 +295,7 @@ export async function compile(options: CompileOptions): Promise<ContributionCont
         origin: `${codeowners.path}:${rules[0]?.line ?? 1}`,
         check: "path_owned",
         patterns,
+        codeownerRules: rules.map((row) => ({ pattern: row.pattern, hasOwners: row.owners.length > 0 })),
         message: "Changed paths match CODEOWNERS and need human review (do not fake an approval).",
       });
       if (ignore !== undefined) rule.ignore = ignore;

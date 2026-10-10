@@ -59,6 +59,18 @@
         "glob": { "type": "string" },
         "ignore": { "type": "array", "items": { "type": "string" } },
         "patterns": { "type": "array", "items": { "type": "string" } },
+        "codeownerRules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pattern", "hasOwners"],
+            "properties": {
+              "pattern": { "type": "string" },
+              "hasOwners": { "type": "boolean" }
+            }
+          }
+        },
         "keys": { "type": "array", "items": { "type": "string" } }
       }
     }

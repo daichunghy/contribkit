@@ -24,7 +24,9 @@ GitHub branch protection, CI, or a review gate.
 
 ## Inputs and outputs
 
-The compiler reads repository files and a trusted Git ref. It classifies
+The compiler reads repository files from a trusted Git ref. For preflight the
+policy revision defaults to the selected diff base, never the proposed HEAD,
+so an unreviewed contribution cannot rewrite the policy it must satisfy. It classifies
 contribution guidance, explicit `contribkit.yml` policy, CODEOWNERS, the local
 diff, and recorded test evidence into a versioned contract. Evaluation returns
 `pass`, `blocked`, or `needs-human`, with stable findings and remediation.
@@ -54,7 +56,9 @@ size, workflow paths, recorded tests, AI disclosure, explicit policy, bundled
 ecosystem adapters, receipt explanation, and bounded hook/MCP integration.
 
 Adapters are advisory unless a maintainer explicitly lists them in
-`blockAdapters`. The current package supports exact test families only; it does
+`blockAdapters`. An unknown adapter ID is surfaced for human review instead
+of being silently ignored. Multiple distinct commands may be necessary to
+satisfy a multi-language contribution. The current package supports exact test families only; it does
 not execute arbitrary repository scripts.
 
 ## Release boundary

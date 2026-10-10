@@ -18,6 +18,9 @@ export function parseCodeowners(text: string): CodeownersRule[] {
     const tokens = content.split(/\s+/).filter((part) => part.length > 0);
     const pattern = tokens[0];
     if (pattern === undefined) continue;
+    // GitHub CODEOWNERS does not support gitignore negation, bracket classes,
+    // or escaped hash prefixes. Invalid lines must not override valid rules.
+    if (pattern.startsWith("!") || pattern.startsWith("\\#") || /[\[\]]/.test(pattern)) continue;
     const owners = tokens.slice(1);
     rules.push({ pattern, owners, line: i + 1 });
   }

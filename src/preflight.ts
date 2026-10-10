@@ -4,7 +4,7 @@ import { compile, type CompileOptions } from "./compile.js";
 import { digestText } from "./canonical.js";
 import { evaluate } from "./evaluate.js";
 import { redactSecrets } from "./redact.js";
-import { buildSnapshot } from "./repo.js";
+import { buildSnapshot, isGitRepo, RepoError, resolveRef } from "./repo.js";
 import type { ContributionContract, EvaluationSnapshot, PreflightReceipt, RecordedCommand } from "./types.js";
 
 export type CommandExecutor = (
@@ -15,6 +15,7 @@ export type CommandExecutor = (
 export async function spawnArgv(
   argv: readonly string[],
   cwd: string,
+  timeoutMs = 120_000,
 ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
   const cmd = argv[0];
   if (cmd === undefined) return { exitCode: 1, stdout: "", stderr: "empty argv" };
@@ -52,13 +53,19 @@ export async function spawnArgv(
       }
     });
     child.on("error", reject);
+    let timedOut = false;
+    let hardStop: ReturnType<typeof setTimeout> | undefined;
     const timer = setTimeout(() => {
+      timedOut = true;
       child.kill("SIGTERM");
-    }, 120_000);
+      // A target test may deliberately ignore SIGTERM. Always bound its life.
+      hardStop = setTimeout(() => { child.kill("SIGKILL"); }, 5_000);
+    }, timeoutMs);
     child.on("close", (code) => {
       clearTimeout(timer);
+      if (hardStop !== undefined) clearTimeout(hardStop);
       resolvePromise({
-        exitCode: code ?? 1,
+        exitCode: timedOut ? 124 : code ?? 1,
         stdout: Buffer.concat(out).toString("utf8"),
         stderr: Buffer.concat(err).toString("utf8"),
       });
@@ -76,6 +83,11 @@ export interface PreflightOptions extends CompileOptions {
   executeCommand?: CommandExecutor;
 }
 
+/**
+ * Run each distinct allowlisted command required by the contract. A
+ * multi-language repository may need more than one successful test record.
+ * Execution is always sequential and requires explicit --run-tests.
+ */
 async function maybeRunTests(
   contract: ContributionContract,
   repoPath: string,
@@ -85,31 +97,43 @@ async function maybeRunTests(
 ): Promise<RecordedCommand[]> {
   const recorded = [...existing];
   if (!runTests) return recorded;
-  const rule = [...contract.rules, ...contract.advisory, ...contract.needsHuman].find(
-    (item) => item.check === "command_recorded" && item.command !== undefined,
-  );
-  const command = rule?.command;
-  if (command === undefined) return recorded;
-  const argv = allowlistedArgv(command);
-  if (argv === undefined) return recorded;
-  try {
-    const result = await executeCommand(argv, repoPath);
-    const log = redactSecrets(`${result.stdout}\n${result.stderr}`);
-    const entry: RecordedCommand = {
-      command: argv.join(" "),
-      exitCode: result.exitCode,
-      source: "executed",
-      logDigest: digestText(log),
-    };
-    recorded.push(entry);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "spawn failed";
-    recorded.push({
-      command: argv.join(" "),
-      exitCode: 127,
-      source: "executed",
-      logDigest: digestText(redactSecrets(message)),
-    });
+
+  const seen = new Set<string>();
+  const commands: string[][] = [];
+  for (const rule of [...contract.rules, ...contract.advisory, ...contract.needsHuman]) {
+    if (rule.check !== "command_recorded" || rule.command === undefined) continue;
+    const argv = allowlistedArgv(rule.command);
+    if (argv === undefined) continue;
+    const key = argv.join("\0");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    commands.push(argv);
+  }
+  // Bundled adapters currently expose at most 13 commands. Fail closed if
+  // future configuration unexpectedly asks to execute an excessive number.
+  if (commands.length > 16) {
+    throw new Error("contribkit refuses to run more than 16 distinct test commands.");
+  }
+
+  for (const argv of commands) {
+    try {
+      const result = await executeCommand(argv, repoPath);
+      const log = redactSecrets(result.stdout + "\n" + result.stderr);
+      recorded.push({
+        command: argv.join(" "),
+        exitCode: result.exitCode,
+        source: "executed",
+        logDigest: digestText(log),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "spawn failed";
+      recorded.push({
+        command: argv.join(" "),
+        exitCode: 127,
+        source: "executed",
+        logDigest: digestText(redactSecrets(message)),
+      });
+    }
   }
   return recorded;
 }
@@ -119,7 +143,15 @@ export async function preflight(options: PreflightOptions): Promise<{
   snapshot: EvaluationSnapshot;
   receipt: PreflightReceipt;
 }> {
-  const compileOpts = { repoPath: options.repoPath, ...(options.ref !== undefined ? { ref: options.ref } : {}) };
+  // An author-controlled HEAD can modify CONTRIBUTING or contribkit.yml.
+  // Default to the caller's trusted diff base, not the proposed branch.
+  // Reject a wrong/nested working directory or invalid base *before* any
+  // opt-in target script has a chance to run.
+  if (!(await isGitRepo(options.repoPath))) {
+    throw new RepoError("not a git repository root: " + options.repoPath);
+  }
+  await resolveRef(options.repoPath, options.baseRef);
+  const compileOpts = { repoPath: options.repoPath, ref: options.ref ?? options.baseRef };
   const contract = await compile(compileOpts);
   const recorded = await maybeRunTests(
     contract,

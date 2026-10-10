@@ -36,6 +36,8 @@ export interface ContractRule {
   glob?: string;
   ignore?: string[];
   patterns?: string[];
+  /** Ordered CODEOWNERS patterns, including later ownerless overrides. */
+  codeownerRules?: { pattern: string; hasOwners: boolean }[];
   keys?: string[];
 }
 

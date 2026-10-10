@@ -38,6 +38,12 @@ PR description must state whether the adapter is advisory or listed in `blockAda
 is advisory so a new ecosystem adapter cannot silently block a contribution. Keep the command
 recorded in the receipt and let the maintainer decide whether it belongs in a blocking policy.
 
+The bundled ecosystem adapters are already present in the tree with manifests
+and golden fixtures. Before proposing a new adapter or reopening a historical
+issue, check `adapters/<id>/adapter.json` and `test/adapters.test.ts` to
+avoid duplicate work. Unrecognized IDs in `blockAdapters` require human
+review rather than weakening an intended gate.
+
 The current bundled set is `python-pytest`, `node-npm-test`, `go-test`, `php-phpunit`, `ruby-rspec`, `rust-cargo`, `dotnet-test`,
 `cmake-ctest`, `bun-test`, `deno-test`, `swift-test`, `elixir-mix`, and `java-maven`. New adapters should have a real repository shape to match and
 should not be added only to increase the adapter count. A manifest may use `packageManager: bun`
