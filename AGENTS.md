@@ -10,8 +10,10 @@ npm run verify
 npx contribkit preflight --repo . --base HEAD
 ```
 
-GitHub main is `contribkit@0.1.0-alpha.7`. The npm `alpha` dist-tag currently resolves alpha.6;
-alpha.7 publication still requires npm two-factor verification. Do not claim the Anthropic community
+The latest documented release is `contribkit@0.1.0-alpha.7`. Release metadata in this
+repository was last reconciled on 2026-09-06; check the live npm registry and
+the source tag before making any new publication claim. Changes on development
+branches are not a published npm release. Do not claim the Anthropic community
 plugin catalog or Claude-for-OSS eligibility.
 
 ## Rules

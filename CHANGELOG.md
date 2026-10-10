@@ -4,6 +4,19 @@ All notable changes are documented here, newest first. Entries mirror the tagged
 
 ## [Unreleased]
 
+- Fixed MCP stdio JSON-RPC framing to use newline-delimited messages, bounded
+  input, correct notification behavior, and regression tests for split frames.
+- Compile contribution rules from the trusted diff base by default to prevent
+  same-branch policy weakening. Handle ordered CODEOWNERS ownerless overrides,
+  and report unknown blocking adapter IDs.
+- Run all distinct opt-in allowlisted test commands (max 16), reject invalid Git
+  roots and refs before any execution, and bound subprocess termination.
+- Harden Git snapshot handling with NUL-delimited filenames, both ends of
+  renamed paths, all-contribution-commit DCO checks, and no symlink dereference
+  when collecting untracked file lengths or non-Git fallback files.
+- Expanded regression tests, updated integration/threat documentation and
+  CI coverage. These are development changes, **not a published release**.
+
 - Added a copy-paste first-use smoke helper and routed `npm run first-use` through
   it so a blocked receipt is kept and explained with the next action.
 - Added the advisory Rust/Cargo and .NET adapters with exact allowlisted

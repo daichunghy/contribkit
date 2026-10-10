@@ -6,7 +6,7 @@ the pull request exists. The first result should be a receipt that says
 
 ## Clean-clone check
 
-After alpha.7 is published, a package-first check is shorter:
+The published alpha.7 quickstart recorded in the README is:
 
 ```sh
 npx contribkit@0.1.0-alpha.7 preflight --repo . --base HEAD
@@ -14,8 +14,7 @@ npx contribkit@0.1.0-alpha.7 preflight --repo . --base HEAD
 
 The source-clone path below remains the reproducible maintainer path.
 
-Use the GitHub source while the npm `alpha` dist-tag is one release behind the
-GitHub tag:
+For a reproducible source checkout, regardless of registry state:
 
 ```sh
 git clone --branch v0.1.0-alpha.7 https://github.com/daichunghy/contribkit.git
@@ -41,12 +40,18 @@ The helper resolves `--repo .` from the directory where you invoke it, so the
 target can be the current repository. Replace the two `/path/to/...` values
 with absolute paths on your machine.
 
+Select a trusted `--base` such as `origin/main` for non-empty changes; by
+default the preflight compiles policy from that revision, not from your edited
+working tree. Use `HEAD` for the clean-clone smoke check only.
+
 The helper returns the original preflight exit code after `explain` completes:
 `0` for `pass` or `needs-human`, and `1` for `blocked`. Do not chain the
 preflight and explain commands with `&&`, because a blocked preflight is the
 useful receipt you need to inspect. `--run-tests` is opt-in and only accepts the
 documented allowlisted command families. The default path does not execute
-target-repository code.
+target-repository code. `--run-tests` runs every distinct allowlisted
+test requirement sequentially, up to a safety cap of 16 commands. Those
+runners still execute target-repository code and must be trusted separately.
 
 For a direct CLI invocation, the equivalent two-step form is:
 

@@ -18,9 +18,11 @@ target Git clone + selected base ref
         PreflightReceipt + explain view
 ```
 
-The target tree is data, not trusted executable code. Ref reads are bound to
-the requested Git revision and the compiler does not walk up to a parent Git
-repository.
+The target tree is data, not trusted executable code. For `preflight`, the
+contract is compiled from the **selected base ref**, not the proposed HEAD,
+so a contributor cannot weaken its own policy as part of the diff. Ref reads
+are bound to commit SHA, and the compiler does not walk up to a parent Git
+repository. Missing Git roots or bases are rejected before running tests.
 
 ## Trust lanes
 
@@ -31,7 +33,18 @@ repository.
    allowlisted argv and records exit code, bounded output, and provenance.
 
 The default preflight path records supplied evidence but does not run target
-code. No compiler or evaluator path calls a model provider or sends telemetry.
+code. Opt-in test execution is sequential, limited to 16 distinct allowlisted
+argv forms, and reports individual exit codes. Test subprocesses have a
+120-second default deadline, SIGTERM followed by SIGKILL, and a distinct
+timeout exit code (124). A NUL-delimited Git diff preserves unusual filenames
+and checks both paths of a rename. Untracked symlinks are not dereferenced
+when collecting line counts.
+
+CODEOWNERS evaluation preserves the last matching rule, including an
+ownerless rule that clears a previous owner requirement. This does not mean
+ContribKit has received an actual GitHub approval.
+
+No compiler or evaluator path calls a model provider or sends telemetry.
 
 ## Modules
 
@@ -42,7 +55,8 @@ code. No compiler or evaluator path calls a model provider or sends telemetry.
 - `src/allowlist.ts` validates exact test argv.
 - `src/hook.ts` applies deny/allow decisions without rewriting commands.
 - `src/mcp.ts` exposes the same deterministic compile/preflight operations over
-  bounded stdio frames.
+  newline-delimited JSON-RPC stdio frames (1 MB input limit). Current support
+  is the legacy MCP initialize handshake, not the newer stateless variant.
 - `schemas/` defines the portable contract and receipt shapes.
 
 ## Adapter contract
