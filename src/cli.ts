@@ -175,12 +175,15 @@ async function doctor(repo: string, explicitBase: string | undefined, json: bool
   } else {
     io.stdout.write("contribkit doctor: ready to inspect (not an approval)\n");
     io.stdout.write("  branch: " + (branch ?? "detached HEAD") + "\n");
-    io.stdout.write("  trusted base: " + base.ref + " (" + base.sha.slice(0, 10) + ")\n");
+    io.stdout.write("  review baseline: " + base.ref + " (" + base.sha.slice(0, 10) + ")\n");
     io.stdout.write("  changed files: " + snapshot.diffStat.files + "\n");
     io.stdout.write("  contract checks: " + (contract.rules.length + contract.advisory.length + contract.needsHuman.length) + "\n");
     io.stdout.write("Next: contribkit check --base " + base.ref + "\n");
+    if (base.ref === "HEAD") {
+      io.stdout.write("Warning: HEAD omits commits already made on this branch. Choose a review target for real PRs.\n");
+    }
     if (base.source === "remote") {
-      io.stdout.write("Note: remote-tracking refs are cached locally; fetch origin to refresh them.\n");
+      io.stdout.write("Note: remote-tracking refs are cached locally; git fetch " + base.ref.split("/")[0] + " to refresh them.\n");
     }
   }
   return 0;
@@ -243,6 +246,12 @@ export async function runCli(argv: string[], io: CliIo = defaultIo): Promise<num
       if (flagged("--json")) io.stdout.write(content);
       else {
         io.stdout.write("base " + base.ref + " (" + base.sha.slice(0, 10) + ")\n");
+        if (base.ref === "HEAD") {
+          io.stdout.write("Warning: --base HEAD excludes commits already on this branch; use the target branch for PR review.\n");
+        }
+        if (result.contract.ref !== base.sha) {
+          io.stdout.write("Warning: --ref overrides the review baseline policy. The compiled contract uses " + result.contract.ref.slice(0, 10) + ".\n");
+        }
         if (result.snapshot.changedPaths.length === 0) {
           io.stdout.write("No changed files against this base; this checks the clean working tree, not pending PR commits.\n");
         }
